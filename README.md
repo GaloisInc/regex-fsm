@@ -7,7 +7,10 @@ The `regex-fsm` tool can be used to convert certain regular expressions to layer
 
 ## Installation
 
-Acquire [nix](curl https://nixos.org/nix/install | sh)
+Acquire nix
+```bash
+curl https://nixos.org/nix/install | sh
+```
 
 ## Build
 
