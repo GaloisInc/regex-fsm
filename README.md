@@ -7,16 +7,17 @@ The `regex-fsm` tool can be used to convert certain regular expressions to layer
 
 ## Installation
 
-Acquire nix
-```bash
-curl https://nixos.org/nix/install | sh
-```
-
 ## Build
 
-`nix-build`
+```bash
+cabal sandbox init
+cabal install -j --depedencies-only
+```
 
 ## Development
 
-`nix-shell` from the current working directory will put the user into an environment to develop `regex-fsm` with `cabal`.
+```
+cabal build
+```
+
 
