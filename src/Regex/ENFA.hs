@@ -1,5 +1,11 @@
 {-# LANGUAGE OverloadedStrings #-}
-module Regex.FSM where
+module Regex.ENFA
+  ( -- * Types
+    Reg  (..)
+  , Move (..)
+  , ENFA (..)
+  , Graph
+  ) where
 
 import           Control.Monad.State
 import           Data.Graph.Inductive (Gr, mkGraph)
@@ -22,39 +28,43 @@ data Reg a
   -- ^ Epsilon, ex. ""
   deriving (Show)
 
--- | Graph representation of NFA
+-- | Graph representation of ENFA
 type Graph a = Gr Int (Move Int a)
 
--- | For representing transitions in the NFA
+-- | For representing transitions in the ENFA
 -- includes epsilon transitions
 data Move s a
   = Move s a s
-  -- ^ A move in the NFA
+  -- ^ A move in the ENFA
   | EMove s s
-  -- ^ An epsilon move in the NFA
+  -- ^ An epsilon move in the ENFA
   deriving (Show, Eq, Ord)
 
--- | NFA
-data NFA s a
-  = NFA { trans :: Set (Move s a)
-        -- ^ Transitions in the NFA
-        , start :: s
-        -- ^ Initial starting state
-        , final :: Set s
-        -- ^ Final states
-        } deriving (Show, Eq)
+-- | ENFA
+data ENFA s a
+  = ENFA { trans :: Set (Move s a)
+         -- ^ Transitions in the ENFA
+         , start :: s
+         -- ^ Initial starting state
+         , final :: Set s
+         -- ^ Final states
+         } deriving (Show, Eq)
 
 newState :: Num s => State s s
 newState = modify (+1) >> get
 
-toENFA :: (Ord s, Num s, Ord a) => Reg a -> NFA s a
+test' = print (toENFA e)
+  where
+    e = Lit 'a' `Union` (Rep (Lit 'b'))
+
+toENFA :: (Ord s, Num s, Ord a) => Reg a -> ENFA s a
 toENFA = flip evalState 0 . go
   where
     -- | "a|b"
     go (a' `Union` b') = do
       (a, b) <- liftM2 (,) (go a') (go b')
       n <- newState
-      pure NFA {
+      pure ENFA {
         start = n
       , final = mconcat [ final a, final b ]
       , trans = mconcat [
@@ -70,7 +80,7 @@ toENFA = flip evalState 0 . go
     go (a' `Cat` b') = do
       a <- go a'
       b <- go b'
-      pure NFA {
+      pure ENFA {
         start = start a
       , final = final b
       , trans = mconcat [
@@ -96,29 +106,20 @@ toENFA = flip evalState 0 . go
     go (Lit x) = do
       start' <- newState
       final' <- newState
-      pure NFA {
+      pure ENFA {
         start = start'
       , trans = S.fromList [ Move start' x final' ]
       , final = S.singleton final'
       }
     -- | ""
-    go Eps = pure $ NFA mempty 0 mempty
+    go Eps = do
+      n <- newState
+      pure $ ENFA mempty n (S.singleton n)
 
-toGraph :: NFA s a -> Graph a
+toGraph :: ENFA s a -> Graph a
 toGraph = undefined
-  where
-    -- | "a|b"
-    go (l `Union` r) v = undefined
-    -- | "ab"
-    go (l `Cat` r) v = undefined
-    -- | "a*"
-    go (Rep r) v = undefined
-    -- | "a"
-    go (Lit x) v = undefined
-    -- | ""
-    go Eps 0 = undefined
 
--- | Show ENFA as Graph
+-- | Show EENFA as Graph
 enfa :: Graph Char
 enfa = mkGraph nodes edges
   where
@@ -128,6 +129,6 @@ enfa = mkGraph nodes edges
              ]
     [one,two,three] = [(1,1),(2,2),(3,3)]
 
--- | Execute a string against this ENFA
-run :: String -> NFA s a -> Bool
+-- | Execute a string against this EENFA
+run :: String -> ENFA s a -> Bool
 run = undefined

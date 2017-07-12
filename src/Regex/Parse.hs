@@ -1,7 +1,7 @@
 module Regex.Parse where
 
 import Control.Monad
-import Regex.FSM
+import Regex.ENFA
 import Text.ParserCombinators.Parsec
 
 type RegexParser = Parser (Reg Char)
