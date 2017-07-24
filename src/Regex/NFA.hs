@@ -1,16 +1,20 @@
-{-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE FlexibleContexts    #-}
+{-# LANGUAGE RecordWildCards     #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 module Regex.NFA where
 
-import qualified Data.Map    as M
+import           Control.Monad.State
+import           Data.Function
+import qualified Data.Map            as M
+import           Data.Maybe
 import           Data.Monoid
-import           Data.Set    (Set)
-import qualified Data.Set    as S
-
+import           Data.Set            (Set)
+import qualified Data.Set            as S
 import           Regex.ENFA
 
 -- | NFA
 data NFA s a
-  = NFA { trans :: Set (s,a,s)
+  = NFA { trans :: Trans' s a
         -- ^ Transitions in the NFA
         , start :: s
         -- ^ Initial starting state
@@ -20,98 +24,99 @@ data NFA s a
 
 type EpsClosure s = M.Map s (S.Set s)
 
--- toNFA :: ENFA s a -> NFA s a
--- toNFA enfa@ENFA {..} = go (createClosure enfa)
---   where
---     go = undefined
---     createClosure ENFA {..} =
---       M.fromList [ (s, fromList y)
---                  | move <- S.toList
---                  ]
+emptyState :: Ord s => DFSState s
+emptyState = DFSState mempty mempty mempty
 
--- | Retrieves all the states out of an ENFA into a `Set a`.
--- TODO: Test that calling `getStates` on the correct construction of an `ENFA`
--- always results in a Set with all states present in the `ENFA`
-getStates :: Ord s => ENFA s a -> Set s
-getStates ENFA {..} =
-  S.foldr (S.union) S.empty $
-    flip S.map trans $ \move ->
-      S.fromList $ case move of
-        Move s _ f -> [s,f]
-        EMove s f  -> [s,f]
-
--- | Test epsilon closure can be constructed successfully
-constructEpsilonClosure :: Ord s => ENFA s a -> EpsClosure s
-constructEpsilonClosure enfa@ENFA {..} = go M.empty $ S.toList (getStates enfa)
+-- | The ε-closure of an NFA state q is the set containing q along with all states in
+-- the automaton that are reachable by any number of ε-transitions from q
+test' :: IO ()
+test' = do
+    print start
+    mapM_ print (M.assocs trans)
+    mapM_ print final
+    putStrLn "========"
+    mapM_ print states
   where
-    go closure [] = closure
-    go closure (x:xs) =
-      go (M.insert x states closure) xs
-        where
-          -- Current state must be added,
-          -- along with all states reachable by a single epsilon move
-          states   = S.singleton x <> epsMoves
-          epsMoves = S.map (\(EMove _ f) -> f) $
-            flip S.filter trans $ \move ->
-              case move of
-                Move _ _ _ -> False
-                EMove s f -> s == x
+    ENFA {..} = enfa
 
-hey :: IO ()
-hey = mapM_ print $ M.toList $
-  constructEpsilonClosure enfa
+type DFAState s a = M.Map s (M.Map a s, Set s)
 
--- | Test epsilon closure
-testEps :: Show s => EpsClosure s -> IO ()
-testEps = mapM_ print
+enfa :: ENFA Integer Char
+enfa = toENFA regex
 
--- | Test epsilon
-k :: EpsClosure Int
-k = M.fromList [ (1, S.fromList [1,2,4])
-               , (2, S.fromList [2])
-               , (3, S.fromList [3])
-               , (4, S.fromList [4])
-               , (5, S.fromList [4,5])
-               ]
+regex :: Reg Char -- (ba*b)
+regex = Lit 'b' `Cat` Rep (Lit 'a') `Cat` Lit 'b'
 
-test :: Bool
-test = k == constructEpsilonClosure enfa
+-- | I need closure
+getClosure :: (Ord s, Ord a) => ENFA s a -> M.Map s (Set s)
+getClosure ENFA {..} =
+  M.fromList $ zip xs $ flip dfs trans <$> xs
+    where
+      xs = S.toList states
 
-enfa :: ENFA Int Char
-enfa = ENFA {
-         trans = S.fromList [ EMove 1 2
-                            , EMove 1 4
-                            , EMove 5 4
-                            , Move 2 'a' 3
-                            , Move 4 'b' 5
-                            ]
-         -- ^ Transitions in the ENFA
-         , start = 1
-         -- ^ Initial starting state
-         , final = S.fromList [ 3, 4 ]
-         -- ^ Final states
-         }
+-- | -- type Trans s a = M.Map s (M.Map (Maybe a) (S.Set s))
+dfs :: (Ord a, Ord s) => s -> Trans s a -> Set s
+dfs start trans = epsClosure $ execState go emptyState {
+    toVisit = [start]
+  , epsClosure = S.singleton start
+  } where
+    go = fix $ \loop -> do
+      maybeS <- popStack
+      forM_ maybeS $ \someState ->
+        forM_ (M.lookup someState trans) $ \transitionMap ->
+          forM_ (M.lookup Nothing transitionMap) $ \epsTransitions -> do
+            forM_ epsTransitions $ \e -> do
+              visited <- hasVisited e
+              unless visited $ do
+                markVisited e
+                pushStack e
+                addToClosure e
+                loop
 
-type FinalStates s = Set s
+data DFSState s = DFSState {
+    toVisit    :: [s]
+  , visited    :: [s]
+  , epsClosure :: Set s
+  } deriving (Show, Eq)
 
--- | If a state has any final states in its epsilon closure
--- it too should be marked as final
-isFinal :: Ord a => a -> FinalStates a -> EpsClosure a -> Bool
-isFinal x finals eps = x `S.member` finals || inClosure
-  where
-    inClosure =
-      case M.lookup x eps of
-        Nothing -> False
-        Just v ->
-          or $ S.toList
-             $ S.map (`S.member` finals) v
+addToClosure
+  :: (Ord s, MonadState (DFSState s) m)
+  => s
+  -> m ()
+addToClosure v = do
+  s <- get
+  ec <- gets epsClosure
+  put s { epsClosure = S.insert v ec }
 
-constructNFA :: (Ord s, Ord a) => FinalStates s -> EpsClosure s -> NFA s a
-constructNFA finals closure =
-  NFA { trans = S.fromList []
-      , start = undefined
-      , final = S.fromList []
-      }
+hasVisited
+  :: (MonadState (DFSState a) f, Eq a)
+  => a
+  -> f Bool
+hasVisited s =
+  elem s <$> gets visited
 
-getEpsilonAdj :: ENFA s a -> [s]
-getEpsilonAdj ENFA {..} = undefined
+markVisited
+  :: MonadState (DFSState a) m
+  => a
+  -> m ()
+markVisited e = modify $ \s ->
+  s { visited = e : visited s }
+
+popStack :: State (DFSState s) (Maybe s)
+popStack = do
+  ns <- get
+  let (pos, newStack) = pop (toVisit ns)
+  put ns { toVisit = newStack }
+  return pos
+    where
+      pop :: [a] -> (Maybe a, [a])
+      pop [] = (Nothing, [])
+      pop (x:xs) = (Just x, xs)
+
+
+pushStack :: s -> State (DFSState s) ()
+pushStack pos = do
+  modify $ \ns -> ns {
+    toVisit = pos : toVisit ns
+  }
+

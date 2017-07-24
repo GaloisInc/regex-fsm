@@ -17,6 +17,7 @@ executable regex-fsm
   other-modules:
     Regex.NFA
     Regex.ENFA
+    Regex.DFA
     Regex.Parse
   build-depends:
     base < 5,
@@ -46,8 +47,10 @@ test-suite tests
     quickcheck-instances,
     fgl
   other-modules:
-    Regex.ENFA
     Regex.NFA
+    Regex.ENFA
+    Regex.DFA
+    Regex.Parse
   default-language:
     Haskell2010
 
