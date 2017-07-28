@@ -1,6 +1,8 @@
-{-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE RecordWildCards #-}
-{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE TemplateHaskell     #-}
+{-# LANGUAGE FlexibleContexts    #-}
+{-# LANGUAGE RecordWildCards     #-}
+{-# LANGUAGE OverloadedStrings   #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 module Regex.DFA
   ( -- * Types
     DFA  (..)
@@ -10,6 +12,7 @@ import           Control.Monad.State
 import           Data.Map            (Map)
 import qualified Data.Map            as M
 import           Data.Maybe
+import           Data.List
 import           Data.Monoid
 import           Data.Set            (Set)
 import qualified Data.Set            as S
@@ -20,23 +23,8 @@ import           Regex.NFA           hiding ( getTransitions
                                             , popStack
                                             , pushStack
                                             , hasVisited
+                                            , markVisited
                                             )
--- | DFA
-data DFA s a
-  = DFA { trans :: Map (Set s) (Map a (Set s))
-        -- ^ Transitions in the DFA
-        , start :: Set s
-        -- ^ Initial starting state
-        , finals :: Set (Set s)
-        -- ^ Final states
-        } deriving (Show, Eq)
-
--- type DFATrans s a = Map (Set s) (Map a (Set s))
-
--- | DFA
-emptyDFA :: Ord s => s -> DFA s a
-emptyDFA start' = DFA mempty (S.singleton start') mempty
-
 -- test' :: Reg Char
 -- test' =
 --   (Rep ((Lit 'a') `Union` (Lit 'b') `Union` (Lit 'c'))) `Cat` (Lit 'a')
@@ -54,14 +42,6 @@ emptyDFA start' = DFA mempty (S.singleton start') mempty
 
 -- | Finally, for all states in the DFA, if any of them were final states in the NFA,
 -- they should also be marked as final in the DFA
-data DFSState s a = DFSState {
-    toVisit :: [s]
-  , visited :: [s]
-  , dfa :: DFATrans s a
-  } deriving (Show, Eq)
-
-emptyState :: (Ord s, Ord a) => DFSState s a
-emptyState = DFSState mempty mempty mempty
 
 -- | Convert NFA to DFA
 -- toDFA :: (Ord s, Ord a) => NFA s a -> DFA s a
@@ -132,8 +112,8 @@ pushStack pos = do
     toVisit = pos : toVisit ns
   }
 
-addDFAState s = modify $ \n ->
-  n { dfa = undefined }
+-- addDFAState s = modify $ \n ->
+--   n { dfa = undefined }
 
 type DFATrans s a = Set (s, a, s)
 
@@ -155,15 +135,137 @@ type DFATrans s a = Set (s, a, s)
 -- are not in the epsilon closure. Check if a label exists already in the mapping of DFA states and epsilon closures.
 -- If so, create a transition in the DFA state to that DFA state
 -- otherwise, create one.
+toDFA' :: Monoid s => (Ord s, Ord a) => ENFA s a -> DFATrans s a
+toDFA' enfa@ENFA {..} = undefined -- dfa $ execState go emptyState {
+--   toVisit = [start]
+-- } where
+--     closureMap = getClosure enfa
+--     go = fix $ \loop -> do
+--       firstNode <- popStack
+--       forM_ firstNode $ \s -> do
+--         forM_ (M.lookup s closureMap) $ \epsClosure -> do
+--           markVisited' s
+--           newDFAStates <- getTransitionsUnionClosures closureMap epsClosure trans
+--           addDFATransitions newDFAStates
+--             -- For each new DFA state, create a new DFA label, unless one already exists
+--             -- If it already exists, use it to create a new transition
+--             -- push new transitions onto the stack and recurse
+--             -- on the nfa states reachable by non-eps transitions
+--             -- mark s as visited
+--           undefined
 
-toDFA' :: (Ord s, Ord a) => ENFA s a -> DFATrans s a
-toDFA' enfa@ENFA {..} = dfa $ execState go emptyState {
-      toVisit = [start]
-    } where
+addDFATransitions = undefined
+markVisited' s = undefined
+
+-- | Find all non-epsilon transitions, and union their epsilon closure
+-- Check to see if this state already exists in the DFA set.
+
+-- getTransitionsUnionClosures closureMap epsClosure transMap = do
+--   let reachableStates = map nonEpstransitions
+--        $ catMaybes
+--        $ (`M.lookup` transMap)
+--        <$> S.toList epsClosure
+--   flip map (M.assocs reachableStates) $ \(k,v) ->
+--     undefined
+--  forM_ (M.keys nextHop) pushOnStack
+
+pushOnStack = undefined
+
+nonEpstransitions :: Ord key => Map (Maybe key) (Set s) -> Map key (Set s)
+nonEpstransitions
+  = M.mapKeys fromJust
+  . M.filterWithKey (const . isJust)
+
+-- newDFAState = do
+--   r@DFSState{..} <- get
+--   put r { dfaState = dfaState + 1 }
+--   return (dfaState + 1)
+
+-- addToMap s closure = do
+--   r <- get
+--   c <- gets cache
+--   let updated = M.insert s closure c
+--   put r { cache = updated }
+
+-- | Start, create a new DFA state
+-- Take epsilon closure of NFA start state
+
+-- | Convert an ENFA into a DFA
+toDFA :: Ord t => ENFA Integer t -> DFA Integer t
+toDFA ENFA {..} = getDFA
+  where
+    -- Retrieve epsilon closure map (call DFS from every state in NFA)
     closureMap = getClosure enfa
-    go = fix $ \loop -> do
-      firstNode <- popStack
-      forM_ firstNode $ \s -> do
-        forM_ (M.lookup s closureMap) $ \epsClosure -> do
-          forM_ 
-      loop
+    -- Retrieve alphabet from ENFA transition map
+    alphabet = nub
+             $ concatMap catMaybes
+             $ map M.keys
+             $ M.elems trans
+    -- Push epsilon closure (our first DFA state) onto the stack
+    startState = emptyState {
+      toVisit = pure (closureMap M.! start)
+    }
+    -- Add DFA transition to transition map
+    addDFATrans newState a nextState = modify $ \d@DFSState{..} -> d {
+      transMap = M.insert (newState, a) nextState transMap
+    }
+    -- Take the DFA transitions accumulated, and actually construct a DFA
+    constructDFA trans =
+      DFA {
+        -- DFA start state *is* e-closure
+        start = closureMap M.! start
+      , finals = S.filter (\set -> set `S.intersection` final /= S.empty)
+               $ S.fromList
+               $ map fst
+               $ M.keys trans
+      , ..
+      }
+    -- Visit DFA states as they are accumulated, careful to detect cycles
+    getDFA = constructDFA . transMap . flip execState startState $ do
+      fix $ \loop -> do
+        -- Pop DFA state
+        maybeState <- popStack
+        forM_ maybeState $ \newState -> do
+          visited <- hasVisited newState
+          unless visited $ do
+            -- Check for cycle (by marking as visited)
+            markVisited newState
+            -- Iterate over alphabet
+            forM_ alphabet $ \a -> do
+              nextState <- S.unions <$> do
+                -- Iterate over states in DFA state
+                forM (S.toList newState) $ \e -> do
+                  pure $ fromMaybe S.empty $ do
+                    -- Lookup state transitions
+                    transMap <- M.lookup e trans
+                    -- Lookup transitions at this specific symbol
+                    states <- M.lookup (Just a) transMap
+                    -- Of states we can transition to (via non-epsilon transitions)
+                    -- include all other states reachable in their epsilon closure.
+                    pure $ S.unions
+                         . S.toList
+                         . S.map (fromMaybe S.empty . flip M.lookup closureMap)
+                         $ states
+              -- Record this state, visit it later
+              addDFATrans newState a nextState
+              pushStack newState
+          loop
+
+data DFSState s a = DFSState {
+    toVisit :: [s]
+  , visited :: [s]
+  , transMap :: Map (s, a) (s)
+  } deriving (Show, Eq)
+
+emptyState :: (Monoid s, Ord s, Ord a) => DFSState s a
+emptyState = DFSState mempty mempty mempty
+
+-- | DFA
+data DFA s a
+  = DFA { trans :: Map (Set s, a) (Set s)
+        -- ^ Transitions in the DFA
+        , start :: Set s
+        -- ^ Initial starting state
+        , finals :: Set (Set s)
+        -- ^ Final states
+        } deriving (Show, Eq)

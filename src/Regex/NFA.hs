@@ -54,6 +54,8 @@ getClosure ENFA {..} =
     where
       xs = S.toList states
 
+-- type Trans s a = M.Map s (M.Map (Maybe a) (S.Set s))
+
 -- | -- type Trans s a = M.Map s (M.Map (Maybe a) (S.Set s))
 dfs :: (Ord a, Ord s) => s -> Trans s a -> Set s
 dfs start trans = epsClosure $ execState go emptyState {

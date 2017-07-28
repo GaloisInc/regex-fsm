@@ -69,7 +69,7 @@ data Move s a
   deriving (Show, Eq, Ord)
 
 type Trans' s a = M.Map s (M.Map a (S.Set s))
-type Trans s a  = M.Map s (M.Map (Maybe a) (S.Set s))
+type Trans s a = M.Map s (M.Map (Maybe a) (S.Set s))
 
 (-|) = (,)
 (|->) :: (s,a) -> s -> Trans s a
