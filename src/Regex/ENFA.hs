@@ -1,111 +1,60 @@
-{-# LANGUAGE DeriveFunctor #-}
-{-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE DeriveFunctor     #-}
+{-# LANGUAGE RecordWildCards   #-}
 {-# LANGUAGE OverloadedStrings #-}
+-----------------------------------------------------------------------------
+-- |
+-- Module      :  Regex.ENFA
+-- Copyright   :  (C) 2016-2017 David M. Johnson
+-- License     :  BSD3-style (see the file LICENSE)
+-- Maintainer  :  David M. Johnson <david@galois.com>
+-- Stability   :  experimental
+-- Portability :  non-portable
+----------------------------------------------------------------------------
 module Regex.ENFA
-  ( -- * Types
+  ( -- * Types re-exported
     Reg  (..)
-  , Move (..)
   , ENFA (..)
-  , Graph
-  , Trans
-  , Trans'
+  , Transition
+    -- * ENFA smart constructors
   , (-->)
   , (#)
-  , (##)
   , (|->)
-  , (|-->)
   , (-|)
-  , toENFA
+    -- * Thompson's construction
+  , thompsons
   ) where
 
 import           Control.Applicative
 import           Control.Monad.State
-import           Data.Graph.Inductive (Gr, mkGraph)
-import qualified Data.Graph.Inductive as G
-import qualified Data.Map             as M
+import qualified Data.Map            as M
 import           Data.Monoid
-import           Data.Set             (Set)
-import qualified Data.Set             as S
+import           Data.Set            (Set)
+import qualified Data.Set            as S
 
--- | AST for Regular Expressions
-data Reg a
-  = Union (Reg a) (Reg a)
-  -- ^ Alternative, ex. (a|b)
-  | Cat (Reg a) (Reg a)
-  -- ^ Concatenation, ex. (ab)
-  | Rep (Reg a)
-  -- ^ Repetition, ex. (a)*
-  | Lit a
-  -- ^ Literal, ex. a
-  | Eps
-  -- ^ Epsilon, ex. ""
-  deriving (Show)
+import           Regex.Types
 
-instance Functor Reg where
-  fmap _ Eps = Eps
-  fmap f (Lit x) = Lit (f x)
-  fmap f (Rep x) = Rep (f <$> x)
-  fmap f (Cat x y) = Cat (f <$> x) (f <$> y)
-  fmap f (Union x y) = Union (f <$> x) (f <$> y)
-
--- | Applicative
-instance Applicative Reg where
-  pure = Lit; (<*>) = undefined
-
--- | Alternative?
-instance Alternative Reg where
-  empty = Eps; (<|>) = undefined
-
--- | Graph representation of ENFA
-type Graph a = Gr Int (Move Int a)
-
--- | For representing transitions in the ENFA
--- includes epsilon transitions
-data Move s a
-  = Move a s
-  -- ^ A move in the ENFA
-  | EMove s
-  -- ^ An epsilon move in the ENFA
-  deriving (Show, Eq, Ord)
-
-type Trans' s a = M.Map s (M.Map a (S.Set s))
-type Trans s a = M.Map s (M.Map (Maybe a) (S.Set s))
-
+-- | Tuple smart constructor
+(-|) :: a -> b -> (a,b)
 (-|) = (,)
-(|->) :: (s,a) -> s -> Trans s a
+
+-- | Epsilon `Transition` smart constructor
+(|->) :: (s,a) -> s -> Transition s a
+
+-- | Transition smart constructor
 (x,y) |-> s = M.singleton x $ M.singleton (Just y) (S.singleton s)
 
-(|-->) :: (s,a) -> s -> Trans' s a
-(x,y) |--> s = M.singleton x (M.singleton y (S.singleton s))
-
--- | ENFA
-data ENFA s a
-  = ENFA { trans :: Trans s a
-         -- ^ Transitions in the ENFA
-         , start :: s
-         -- ^ Initial starting state
-         , final :: Set s
-         -- ^ Final states
-         , states :: Set s
-         -- ^ List of all states
-         } deriving (Show, Eq)
-
-newState :: Num s => State s s
-newState = modify (+1) >> get
-
-(#) :: (Ord s, Ord a) => Trans s a -> Trans s a -> Trans s a
+-- | Union Transition
+(#) :: (Ord s, Ord a) => Transition s a -> Transition s a -> Transition s a
 (#) = M.unionWith (M.unionWith (S.union))
 infixr 5 #
 
-(##) :: (Ord s, Ord a) => Trans' s a -> Trans' s a -> Trans' s a
-(##) = M.unionWith (M.unionWith (S.union))
-infixr 5 ##
-
+-- | Single Transition construction
 (-->) :: k -> a1 -> M.Map k (M.Map (Maybe a) (Set a1))
 s --> s' = M.singleton s (M.singleton Nothing (S.singleton s'))
 
-toENFA :: (Ord s, Num s, Ord a) => Reg a -> ENFA s a
-toENFA = flip evalState 0 . go
+-- | Thompson's construction
+thompsons :: (Ord s, Num s, Ord a) => Reg a -> ENFA s a
+thompsons = flip evalState 0 . go
   where
     -- | "a|b"
     go (a' `Union` b') = do
@@ -157,19 +106,6 @@ toENFA = flip evalState 0 . go
       n <- newState
       pure $ ENFA mempty n (S.singleton n) (S.singleton n)
 
-toGraph :: ENFA s a -> Graph a
-toGraph = undefined
-
--- | Show EENFA as Graph
-enfa :: Graph Char
-enfa = mkGraph nodes edges
-  where
-    nodes =  [ one, two, three ]
-    edges =  [ (1, 2, Move 'a' 2)
-             , (2, 3, Move 'b' 3)
-             ]
-    [one,two,three] = [(1,1),(2,2),(3,3)]
-
--- | Execute a string against this EENFA
-run :: String -> ENFA s a -> Bool
-run = undefined
+    -- Requests new state
+    newState :: Num s => State s s
+    newState = modify (+1) >> get

@@ -15,13 +15,15 @@ executable regex-fsm
   main-is:
     Main.hs
   other-modules:
-    Regex.NFA
+    Regex.Closure
+    Regex.Graph
     Regex.ENFA
     Regex.DFA
     Regex.Parse
   build-depends:
     base < 5,
     containers,
+    data-default,
     fgl,
     fgl-visualize,
     mtl,
@@ -47,7 +49,7 @@ test-suite tests
     quickcheck-instances,
     fgl
   other-modules:
-    Regex.NFA
+    Regex.Closure
     Regex.ENFA
     Regex.DFA
     Regex.Parse

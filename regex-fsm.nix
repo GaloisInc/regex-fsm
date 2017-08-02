@@ -1,6 +1,6 @@
-{ mkDerivation, base, containers, fgl, fgl-visualize, hspec, mtl
-, optparse-generic, parsec, QuickCheck, quickcheck-instances
-, stdenv
+{ mkDerivation, base, containers, data-default, fgl, fgl-visualize
+, hspec, mtl, optparse-generic, parsec, QuickCheck
+, quickcheck-instances, stdenv
 }:
 mkDerivation {
   pname = "regex-fsm";
@@ -9,7 +9,8 @@ mkDerivation {
   isLibrary = false;
   isExecutable = true;
   executableHaskellDepends = [
-    base containers fgl fgl-visualize mtl optparse-generic parsec
+    base containers data-default fgl fgl-visualize mtl optparse-generic
+    parsec
   ];
   testHaskellDepends = [
     base containers fgl hspec QuickCheck quickcheck-instances
