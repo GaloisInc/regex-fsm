@@ -113,8 +113,8 @@ subset enfa@ENFA {..} = getDFA
 
 -- | DFS State
 data DFSState s a = DFSState {
-    toVisit :: [s]
-  , visited :: [s]
+    toVisit  :: [s]
+  , visited  :: [s]
   , transMap :: Map (s, a) (s)
   } deriving (Show, Eq)
 
@@ -131,8 +131,21 @@ data DFA s a
 -- | Minimize a DFA
 -- Two DFAs are called equivalent if they recognize the same regular language.
 -- For every regular language L, there exists a unique, minimal DFA that recognizes L
-minimize' :: (Ord a, Ord s) => DFA (Set s) a -> Map (Set s) (Set s)
-minimize' = equivalentToRewrite . equivalentStates
+minimize :: (Ord a, Ord s) => DFA (Set s) a -> DFA (Set s) a
+minimize dfa@DFA {..} =
+  DFA { trans = update dfa
+      , start = rewrite start
+      , finals = S.map rewrite finals
+      }
+  where
+    update dfa@DFA {..} =
+        M.fromList
+      . map (\((s,a),s') -> ((rewrite s, a), rewrite s'))
+      . M.toList
+      $ trans
+    rewrite s =
+      equivalentToRewrite
+        (equivalentStates dfa) M.! s
 
 smallPairs :: [t] -> [(t, t)]
 smallPairs xs = do
@@ -145,11 +158,9 @@ related rel s s' =
   s == s' || (s, s') `S.member` rel || (s', s) `S.member` rel
 
 initialize :: forall s a . Ord s => DFA (Set s) a -> Set (Set s, Set s)
--- nonFinals:
--- think we need to call smallPairs here since we only care about the transitions in the map
 initialize DFA {..} = S.fromList finals' <> S.fromList nonFinals
    where
-     finals' = smallPairs (S.toList finals :: [Set s])
+     finals' = smallPairs (S.toList finals)
      nonFinals =
          smallPairs
        . S.toList
@@ -162,14 +173,16 @@ step dfa rel =
   S.fromList [ (s,s')
              | (s,s') <- S.toList rel
              , a <- S.toList $ getAlphabet dfa
-             , let l = Regex.DFA.trans dfa M.! (s,a)
+             , let l = Regex.DFA.trans dfa M.! (s, a)
              , let r = Regex.DFA.trans dfa M.! (s',a)
              , related rel l r
              ]
 
 getAlphabet :: Ord a => DFA s a -> Set a
 getAlphabet DFA {..} =
-  S.fromList [ snd x | x <- M.keys trans ]
+  S.fromList [ snd x
+             | x <- M.keys trans
+             ]
 
 equivalentStates :: (Ord a, Ord s) => DFA (Set s) a -> Set (Set s, Set s)
 equivalentStates dfa = go (initialize dfa)
@@ -179,7 +192,7 @@ equivalentStates dfa = go (initialize dfa)
       where
         rel' = step dfa rel
 
-equivalentToRewrite :: Ord s => Set (Set s, Set s) -> Map (Set s) (Set s) -- what about the 'a's?
+equivalentToRewrite :: Ord s => Set (Set s, Set s) -> Map (Set s) (Set s)
 equivalentToRewrite s = M.fromListWith max
   [ (src, trgt)
   | (l,r) <- S.toList s
