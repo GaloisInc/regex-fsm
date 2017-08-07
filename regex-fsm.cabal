@@ -19,6 +19,7 @@ executable regex-fsm
     Regex.Graph
     Regex.ENFA
     Regex.DFA
+    Regex.MBP
     Regex.Parse
   build-depends:
     base < 5,

@@ -2,32 +2,21 @@ module Regex.Parse where
 
 import Control.Monad
 import Regex.ENFA
+
 import Text.ParserCombinators.Parsec
+import Text.ParserCombinators.Parsec.Expr
 
-type RegexParser = Parser (Reg Char)
+term :: Parser (Reg Char)
+term = buildExpressionParser ops atom where
+  ops = [ [ Postfix (Rep <$ char '*') ]
+        , [ Infix (return Cat) AssocRight ]
+        , [ Infix (Union <$ char '|') AssocRight ]
+        ]
+  atom = msum
+    [ Lit <$> noneOf "*|()"
+    , between (char '(') (char ')') term
+    ]
 
--- | Regular Expression parser
-regex :: RegexParser
-regex = msum [ try alt' ]
-  where
-    alt' = between (char '(') (char ')') (try alt <|> alt')
+main :: IO ()
+main = parseTest term "he(llo)*|world"
 
--- | Parse alternative
-alt :: RegexParser
-alt = do
-  l <- try lit <|> regex
-  char '|'
-  r <- try lit <|> regex
-  pure $ l `Union` r
-
--- | Consume at least one bit from a bitstring
-lit :: RegexParser
-lit = Lit <$> letter
-
--- | Epsilon Parser
-eps :: RegexParser
-eps = Eps <$ string mempty
-
--- | Union (Lit 'a') (Union (Lit 'b') (Union (Lit 'e') (Lit 'c')))
-test :: IO ()
-test = parseTest regex "(a|(b|(e|c)))"
