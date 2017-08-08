@@ -1,8 +1,8 @@
 {-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE KindSignatures #-}
-{-# LANGUAGE RankNTypes #-}
-{-# LANGUAGE RecordWildCards #-}
-module Regex.MBP where
+{-# LANGUAGE KindSignatures   #-}
+{-# LANGUAGE RankNTypes       #-}
+{-# LANGUAGE RecordWildCards  #-}
+module Regex.MBP ( toMatrices ) where
 
 import           Control.Monad.State
 import           Data.Maybe
@@ -42,10 +42,10 @@ buildStep DFA {..} srcs = (matrices, tgts)
 -- | Convert to Matrices
 toMatrices
   :: (Ord a, Ord s, Foldable t)
-  => DFA s a
-  -> t a
+  => t a
+  -> DFA s a
   -> [Map a Matrix]
-toMatrices dfa@DFA{..} input
+toMatrices input dfa@DFA{..}
   = flip evalState (S.singleton start)
   $ replicateM (length input)
   $ state (buildStep dfa)

@@ -1,44 +1,48 @@
 {-# LANGUAGE DeriveGeneric       #-}
+{-# LANGUAGE RecordWildCards     #-}
 {-# LANGUAGE OverloadedStrings   #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 module Main where
 
 import Data.Graph.Inductive.Dot
 import Options.Generic
+import Text.ParserCombinators.Parsec
+
+import Regex.Types
+import Regex.Parse
 import Regex.ENFA
+import Regex.DFA
+import Regex.MBP
 
--- | OutputType (i.e. `-outputType json`)
-data OutputType
-  = JSON
-  | DOT
-  deriving (Show, Eq, Generic, Read)
-
-instance ParseField OutputType
-instance ParseFields OutputType
-instance ParseRecord OutputType
-
--- | Options `regex-fsm -o file -t dot -r a|b -i a`
--- Writes file.dot
+-- | Example `./regex-fsm --regex (a|b)|(a|b) --input ab
 data Options
-  = Options { outputFileName :: String
-            , type' :: OutputType
-            , regex :: String
-            , input :: String
-            } deriving (Show, Eq, Generic)
+  = Options
+  { regex :: String
+  , input :: String
+  } deriving (Show, Eq, Generic)
 
 modifiers :: Modifiers
-modifiers = defaultModifiers
-  { shortNameModifier = firstLetter }
+modifiers = defaultModifiers { shortNameModifier = firstLetter }
 
 instance ParseRecord Options where
   parseRecord = parseRecordWithModifiers modifiers
 
-showENFA enfa =
-  writeFile "file.dot" $ showDot (fglToDot enfa)
-
 -- | Main function
 main :: IO ()
 main = do
-   options :: Options <- getRecord "regex-fsm"
-   print options
-   return ()
+  Options {..} <- getRecord "regex-fsm"
+  case parse regexParser "regex" regex :: Either ParseError (Reg Char) of
+    Left err -> do
+      putStrLn "Failed to parse, error:"
+      print err
+    Right regex -> do
+      putStrLn "regex"
+      print regex
+      putStrLn "thompons"
+      print . thompsons $ regex
+      putStrLn "subset"
+      print . subset . thompsons $ regex
+      putStrLn "minimized"
+      print . minimize . subset . thompsons $ regex
+      putStrLn "matrices"
+      print . toMatrices input . minimize . subset . thompsons $ regex

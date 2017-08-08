@@ -16,9 +16,11 @@ module Regex.DFA
   ( -- * Types
     DFA  (..)
   , subset
+  , minimize
   ) where
 
 import           Control.Monad.State
+import Debug.Trace
 import           Data.List
 import           Data.Map            (Map)
 import qualified Data.Map            as M
@@ -55,9 +57,7 @@ subset enfa@ENFA {..} = getDFA
         -- DFA start state *is* e-closure
         start = closureMap M.! start
       , finals = S.filter (\set -> set `S.intersection` final /= S.empty)
-               $ S.fromList
-               $ map fst
-               $ M.keys trans
+               $ S.fromList (M.elems closureMap)
       , ..
       }
     -- Empty DFA state
@@ -120,13 +120,14 @@ data DFSState s a = DFSState {
 
 -- | DFA
 data DFA s a
-  = DFA { trans :: Map (s, a) s
-        -- ^ Transitions in the DFA
-        , start :: s
-        -- ^ Initial starting state
-        , finals :: Set s
-        -- ^ Final states
-        } deriving (Show, Eq)
+  = DFA
+  { trans :: Map (s, a) s
+    -- ^ Transitions in the DFA
+  , start :: s
+    -- ^ Initial starting state
+  , finals :: Set s
+    -- ^ Final states
+  } deriving (Show, Eq)
 
 -- | Minimize a DFA
 -- Two DFAs are called equivalent if they recognize the same regular language.
@@ -198,3 +199,6 @@ equivalentToRewrite s = M.fromListWith max
   | (l,r) <- S.toList s
   , let [src,trgt] = sort [l,r]
   ]
+
+k :: Ord s => Map s (Map (Maybe a) (Set s)) -> Set (Set s)
+k trans = S.fromList $ concat $ map (M.elems) $ M.elems trans
