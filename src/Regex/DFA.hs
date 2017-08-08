@@ -20,7 +20,6 @@ module Regex.DFA
   ) where
 
 import           Control.Monad.State
-import Debug.Trace
 import           Data.List
 import           Data.Map            (Map)
 import qualified Data.Map            as M
@@ -28,12 +27,13 @@ import           Data.Maybe
 import           Data.Monoid
 import           Data.Set            (Set)
 import qualified Data.Set            as S
+import           Debug.Trace
 
-import           Regex.Closure       hiding (DFSState(..), popStack, markVisited, hasVisited, pushStack, trans)
-import           Regex.Types         hiding (DFSState(..), popStack, markVisited, hasVisited, pushStack, trans)
+import           Regex.Closure       (getClosure)
+import           Regex.Types         (ENFA(..))
 
 -- | Convert an ENFA into a DFA
-subset :: Ord t => ENFA Integer t -> DFA (Set Integer) t
+subset :: Ord a => Ord s => ENFA s a -> DFA (Set s) a
 subset enfa@ENFA {..} = getDFA
   where
     -- Retrieve epsilon closure map (call DFS from every state in NFA)
@@ -77,8 +77,9 @@ subset enfa@ENFA {..} = getDFA
           pop [] = (Nothing, [])
           pop (x:xs) = (Just x, xs)
 
-    pushStack :: s -> State (DFSState s a) ()
-    pushStack p = modify $ \ns -> ns { toVisit = p : toVisit ns }
+    pushStack p = modify $ \ns -> ns {
+      toVisit = p : toVisit ns
+    }
 
     -- Visit DFA states as they are accumulated, careful to detect cycles
     getDFA = constructDFA . transMap . flip execState startState $ do

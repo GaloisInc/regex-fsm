@@ -37,13 +37,11 @@ main = do
       putStrLn "Failed to parse, error:"
       print err
     Right regex -> do
-      putStrLn "regex"
+      putStrLn "== Regular Expression AST =="
       pPrint regex
-      putStrLn "thompons"
+      putStrLn "== Thompon's construction =="
       pPrint . thompsons $ regex
-      putStrLn "subset"
+      putStrLn "== Subset construction =="
       pPrint . subset . thompsons $ regex
-      putStrLn "minimized"
-      pPrint . minimize . subset . thompsons $ regex
-      putStrLn "matrices"
+      putStrLn "== Matrix Branching Program =="
       pPrint . toMatrices input . minimize . subset . thompsons $ regex

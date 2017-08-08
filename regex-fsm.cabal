@@ -44,12 +44,15 @@ test-suite tests
   hs-source-dirs:
     src, test
   build-depends:
-    base < 5,
-    containers,
-    hspec,
-    QuickCheck,
-    quickcheck-instances,
-    fgl
+                QuickCheck,
+                base < 5,
+                containers,
+                data-default,
+                fgl,
+                hspec,
+                mtl,
+                parsec,
+                quickcheck-instances
   other-modules:
     Regex.Closure
     Regex.ENFA

@@ -109,3 +109,17 @@ thompsons = flip evalState 0 . go
     -- Requests new state
     newState :: Num s => State s s
     newState = modify (+1) >> get
+
+-- simulate :: Ord a => [a] -> ENFA s a -> Bool
+-- simulate xs ENFA {..} = go xs start
+--   where
+--     go [] s = s `S.member` final
+--     go (x:xs) s =
+--       case M.lookup s trans of
+--         Nothing -> False
+--         Just map' ->
+--           case M.lookup (Just x) map' of
+--             Nothing ->
+--               case 
+--             Just set' -> 
+
