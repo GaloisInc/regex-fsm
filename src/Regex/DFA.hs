@@ -132,7 +132,7 @@ data DFA s a
 -- | Minimize a DFA
 -- Two DFAs are called equivalent if they recognize the same regular language.
 -- For every regular language L, there exists a unique, minimal DFA that recognizes L
-minimize :: (Ord a, Ord s) => DFA (Set s) a -> DFA (Set s) a
+minimize :: Show s => (Ord a, Ord s) => DFA (Set s) a -> DFA (Set s) a
 minimize dfa@DFA {..} =
   DFA { trans = update dfa
       , start = rewrite start
@@ -145,8 +145,8 @@ minimize dfa@DFA {..} =
       . M.toList
       $ trans
     rewrite s =
-      equivalentToRewrite
-        (equivalentStates dfa) M.! s
+      fromMaybe s $ M.lookup s $
+          equivalentToRewrite (equivalentStates dfa)
 
 smallPairs :: [t] -> [(t, t)]
 smallPairs xs = do
@@ -154,11 +154,12 @@ smallPairs xs = do
   x' <- rs
   return (r, x')
 
-related :: Ord s => Set (s,s) -> s -> s -> Bool
-related rel s s' =
+related :: Ord s => Set (s,s) -> Maybe s -> Maybe s -> Bool
+related rel (Just s) (Just s') =
   s == s' || (s, s') `S.member` rel || (s', s) `S.member` rel
+related _ _ _ = False
 
-initialize :: forall s a . Ord s => DFA (Set s) a -> Set (Set s, Set s)
+initialize :: Show s => Ord s => DFA (Set s) a -> Set (Set s, Set s)
 initialize DFA {..} = S.fromList finals' <> S.fromList nonFinals
    where
      finals' = smallPairs (S.toList finals)
@@ -167,25 +168,27 @@ initialize DFA {..} = S.fromList finals' <> S.fromList nonFinals
        . S.toList
        . (`S.difference` finals)
        . S.map fst
-       . M.keysSet $ trans
+       . M.keysSet
+       $ trans
 
-step :: (Ord a, Ord s) => DFA (Set s) a -> Set (Set s, Set s) -> Set (Set s, Set s)
+step :: (Ord a, Ord s)
+     => DFA (Set s) a
+     -> Set (Set s, Set s)
+     -> Set (Set s, Set s)
 step dfa rel =
   S.fromList [ (s,s')
              | (s,s') <- S.toList rel
              , a <- S.toList $ getAlphabet dfa
-             , let l = Regex.DFA.trans dfa M.! (s, a)
-             , let r = Regex.DFA.trans dfa M.! (s',a)
+             , let l = M.lookup (s, a) (Regex.DFA.trans dfa)
+             , let r = M.lookup (s',a) (Regex.DFA.trans dfa)
              , related rel l r
              ]
 
 getAlphabet :: Ord a => DFA s a -> Set a
 getAlphabet DFA {..} =
-  S.fromList [ snd x
-             | x <- M.keys trans
-             ]
+  S.fromList [ snd x | x <- M.keys trans ]
 
-equivalentStates :: (Ord a, Ord s) => DFA (Set s) a -> Set (Set s, Set s)
+equivalentStates :: Show s => (Ord a, Ord s) => DFA (Set s) a -> Set (Set s, Set s)
 equivalentStates dfa = go (initialize dfa)
   where
     go rel | rel' == rel = rel
@@ -199,6 +202,3 @@ equivalentToRewrite s = M.fromListWith max
   | (l,r) <- S.toList s
   , let [src,trgt] = sort [l,r]
   ]
-
-k :: Ord s => Map s (Map (Maybe a) (Set s)) -> Set (Set s)
-k trans = S.fromList $ concat $ map (M.elems) $ M.elems trans

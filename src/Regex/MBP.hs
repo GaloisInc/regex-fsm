@@ -5,9 +5,9 @@
 module Regex.MBP ( toMatrices ) where
 
 import           Control.Monad.State
-import           Data.Maybe
 import           Data.Map
 import qualified Data.Map            as M
+import           Data.Maybe
 import           Data.Set
 import qualified Data.Set            as S
 import           Regex.DFA

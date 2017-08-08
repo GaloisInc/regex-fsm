@@ -29,7 +29,8 @@ executable regex-fsm
     fgl-visualize,
     mtl,
     optparse-generic,
-    parsec
+    parsec,
+    pretty-show
   hs-source-dirs:
     src, exe
   default-language:

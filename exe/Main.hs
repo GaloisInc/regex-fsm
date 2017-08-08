@@ -7,6 +7,7 @@ module Main where
 import Data.Graph.Inductive.Dot
 import Options.Generic
 import Text.ParserCombinators.Parsec
+import Text.Show.Pretty
 
 import Regex.Types
 import Regex.Parse
@@ -37,12 +38,12 @@ main = do
       print err
     Right regex -> do
       putStrLn "regex"
-      print regex
+      pPrint regex
       putStrLn "thompons"
-      print . thompsons $ regex
+      pPrint . thompsons $ regex
       putStrLn "subset"
-      print . subset . thompsons $ regex
+      pPrint . subset . thompsons $ regex
       putStrLn "minimized"
-      print . minimize . subset . thompsons $ regex
+      pPrint . minimize . subset . thompsons $ regex
       putStrLn "matrices"
-      print . toMatrices input . minimize . subset . thompsons $ regex
+      pPrint . toMatrices input . minimize . subset . thompsons $ regex
