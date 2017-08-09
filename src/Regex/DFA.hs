@@ -27,6 +27,7 @@ import           Data.Maybe
 import           Data.Monoid
 import           Data.Set            (Set)
 import qualified Data.Set            as S
+import           Debug.Trace
 
 import           Regex.Closure       (getClosure)
 import           Regex.Types         (ENFA(..))
@@ -150,8 +151,7 @@ minimize dfa@DFA {..} =
       . M.toList
       $ trans
     rewrite s =
-      fromMaybe s $ M.lookup s $
-        equivalentToRewrite (equivalentStates dfa)
+      fromMaybe s $ M.lookup s $ equivalentToRewrite (equivalentStates dfa)
 
 smallPairs :: [t] -> [(t, t)]
 smallPairs xs = do
@@ -159,10 +159,9 @@ smallPairs xs = do
   x' <- rs
   return (r, x')
 
-related :: Ord s => Set (s,s) -> Maybe s -> Maybe s -> Bool
-related rel (Just s) (Just s') =
+related :: Ord s => Set (s,s) -> s -> s -> Bool
+related rel s s' =
   s == s' || (s, s') `S.member` rel || (s', s) `S.member` rel
-related _ _ _ = False
 
 initialize :: Show s => Ord s => DFA (Set s) a -> Set (Set s, Set s)
 initialize DFA {..} = S.fromList finals' <> S.fromList nonFinals
@@ -180,14 +179,13 @@ step :: (Ord a, Ord s)
      => DFA (Set s) a
      -> Set (Set s, Set s)
      -> Set (Set s, Set s)
-step dfa rel =
-  S.fromList [ (s,s')
-             | (s,s') <- S.toList rel
-             , a <- S.toList $ getAlphabet dfa
-             , let l = M.lookup (s, a) (Regex.DFA.trans dfa)
-             , let r = M.lookup (s',a) (Regex.DFA.trans dfa)
-             , related rel l r
-             ]
+step dfa rel = S.filter neighborsRelated rel where
+  neighborsRelated (s,s') = and
+    [ related rel l r
+    | a <- S.toList $ getAlphabet dfa
+    , let l = (Regex.DFA.trans dfa) M.! (s, a)
+    , let r = (Regex.DFA.trans dfa) M.! (s',a)
+    ]
 
 getAlphabet :: Ord a => DFA s a -> Set a
 getAlphabet DFA {..} =
