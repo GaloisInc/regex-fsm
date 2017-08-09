@@ -2,25 +2,20 @@
 {-# LANGUAGE RecordWildCards     #-}
 {-# LANGUAGE OverloadedStrings   #-}
 {-# LANGUAGE ScopedTypeVariables #-}
-module Main where
+module Main ( main ) where
 
 import Data.Graph.Inductive.Dot
 import Options.Generic
 import Text.ParserCombinators.Parsec
 import Text.Show.Pretty
 
-import Regex.Types
-import Regex.Closure
-import Regex.Parse
-import Regex.ENFA
-import Regex.DFA
-import Regex.MBP
+import Regex
 
 -- | Example `./regex-fsm --regex (a|b)|(a|b) --input ab
 data Options
   = Options
   { regex :: String
-  , input :: String
+  , inputLength :: String
   } deriving (Show, Eq, Generic)
 
 modifiers :: Modifiers
@@ -40,7 +35,7 @@ main = do
     Right regex -> do
       putStrLn "== Regular Expression AST =="
       pPrint regex
-      putStrLn "== Thompon's construction =="
+      putStrLn "== Thompson's construction =="
       pPrint . thompsons $ regex
       putStrLn "== Closure construction =="
       pPrint . getClosure . thompsons $ regex
@@ -49,4 +44,4 @@ main = do
       putStrLn "== Minimized DFA =="
       pPrint . minimize . subset . thompsons $ regex
       putStrLn "== Matrix Branching Program =="
-      pPrint . toMatrices input . minimize . subset . thompsons $ regex
+      pPrint . toMatrices inputLength . minimize . subset . thompsons $ regex

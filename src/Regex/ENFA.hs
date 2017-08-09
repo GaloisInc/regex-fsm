@@ -110,16 +110,21 @@ thompsons = flip evalState 0 . go
     newState :: Num s => State s s
     newState = modify (+1) >> get
 
--- simulate :: Ord a => [a] -> ENFA s a -> Bool
--- simulate xs ENFA {..} = go xs start
---   where
---     go [] s = s `S.member` final
---     go (x:xs) s =
---       case M.lookup s trans of
---         Nothing -> False
---         Just map' ->
---           case M.lookup (Just x) map' of
---             Nothing ->
---               case 
---             Just set' -> 
+-- | Handle running a enfa
+simulate :: Ord s => Ord a => [a] -> ENFA s a -> Bool
+simulate xs enfa@ENFA {..} = go xs start
+  where
+    go [] s = s `S.member` final
+    go (x:xs) s =
+      case M.lookup s trans of
+        Nothing -> False
+        Just map' ->
+          case M.lookup (Just x) map' of
+            Nothing ->
+              case M.lookup Nothing map' of
+                Nothing -> False
+                Just k -> or $ map (go xs) (S.toList k)
+            Just set' ->
+              or $ map (go xs) (S.toList set')
+
 
