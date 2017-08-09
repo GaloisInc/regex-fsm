@@ -14,7 +14,12 @@ import           Regex.DFA
 
 type Matrix = [[Int]]
 
-buildStep :: Ord s => Ord a => DFA s a -> Set s -> (Map a Matrix, Set s)
+buildStep
+  :: Ord s
+  => Ord a
+  => DFA s a
+  -> Set s
+  -> (Map a Matrix, Set s)
 buildStep DFA {..} srcs = (matrices, tgts)
   where
     alphabet = Prelude.map snd (M.keys trans)
@@ -27,9 +32,9 @@ buildStep DFA {..} srcs = (matrices, tgts)
         [ if M.lookup (src,a) trans == Just tgt
             then 1
             else 0
-        | src <- S.toAscList srcs
+        | tgt <- S.toAscList tgts
         ]
-      | tgt <- S.toAscList tgts
+      | src <- S.toAscList srcs
       ]
     tgts =
       S.fromList . catMaybes $
