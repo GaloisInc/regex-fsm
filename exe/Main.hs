@@ -10,6 +10,7 @@ import Text.ParserCombinators.Parsec
 import Text.Show.Pretty
 
 import Regex.Types
+import Regex.Closure
 import Regex.Parse
 import Regex.ENFA
 import Regex.DFA
@@ -41,7 +42,11 @@ main = do
       pPrint regex
       putStrLn "== Thompon's construction =="
       pPrint . thompsons $ regex
+      putStrLn "== Closure construction =="
+      pPrint . getClosure . thompsons $ regex
       putStrLn "== Subset construction =="
       pPrint . subset . thompsons $ regex
+      putStrLn "== Minimized DFA =="
+      pPrint . minimize . subset . thompsons $ regex
       putStrLn "== Matrix Branching Program =="
       pPrint . toMatrices input . minimize . subset . thompsons $ regex

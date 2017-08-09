@@ -27,7 +27,6 @@ import           Data.Maybe
 import           Data.Monoid
 import           Data.Set            (Set)
 import qualified Data.Set            as S
-import           Debug.Trace
 
 import           Regex.Closure       (getClosure)
 import           Regex.Types         (ENFA(..))
@@ -56,10 +55,15 @@ subset enfa@ENFA {..} = getDFA
       DFA {
         -- DFA start state *is* e-closure
         start = closureMap M.! start
-      , finals = S.filter (\set -> set `S.intersection` final /= S.empty)
-               $ S.fromList (M.elems closureMap)
+      , finals =
+          S.filter (\set -> set `S.intersection` final /= S.empty)
+            $ getAllStates trans
       , ..
       }
+    getAllStates trans =
+      S.fromList (M.elems trans)
+        `S.union`
+           S.map fst (S.fromList $ M.keys trans)
     -- Empty DFA state
     emptyState = DFSState mempty mempty mempty
     hasVisited s = elem s <$> gets visited
@@ -109,14 +113,14 @@ subset enfa@ENFA {..} = getDFA
                          $ states
               -- Record this state, visit it later
               addDFATrans newState a nextState
-              pushStack newState
+              pushStack nextState
           loop
 
 -- | DFS State
 data DFSState s a = DFSState {
     toVisit  :: [s]
   , visited  :: [s]
-  , transMap :: Map (s, a) (s)
+  , transMap :: Map (s, a) s
   } deriving (Show, Eq)
 
 -- | DFA
@@ -147,7 +151,7 @@ minimize dfa@DFA {..} =
       $ trans
     rewrite s =
       fromMaybe s $ M.lookup s $
-          equivalentToRewrite (equivalentStates dfa)
+        equivalentToRewrite (equivalentStates dfa)
 
 smallPairs :: [t] -> [(t, t)]
 smallPairs xs = do
