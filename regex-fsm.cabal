@@ -18,6 +18,7 @@ executable regex-fsm
     Regex
   build-depends:
     base < 5,
+    boltzmann-samplers,
     containers,
     data-default,
     fgl,
@@ -34,20 +35,24 @@ executable regex-fsm
 test-suite tests
   type:
     exitcode-stdio-1.0
+  ghc-options:
+    -O2
   main-is:
     Main.hs
   hs-source-dirs:
     src, test
   build-depends:
-    base < 5,
-    containers,
-    data-default,
-    fgl,
-    hspec,
-    mtl,
-    parsec,
-    QuickCheck,
-    quickcheck-instances
+                QuickCheck,
+                base < 5,
+                boltzmann-samplers,
+                containers,
+                data-default,
+                fgl,
+                hspec,
+                mtl,
+                parsec,
+                pretty-show,
+                quickcheck-instances
   other-modules:
     Regex
   default-language:

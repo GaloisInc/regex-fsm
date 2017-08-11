@@ -17,6 +17,7 @@ module Regex.DFA
     DFA  (..)
   , subset
   , minimize
+  , simulateDFA
   ) where
 
 import           Control.Monad.State
@@ -205,3 +206,23 @@ equivalentToRewrite s = M.fromListWith max
   | (l,r) <- S.toList s
   , let [src,trgt] = sort [l,r]
   ]
+
+-- data DFA s a
+--   = DFA
+--   { trans :: Map (s, a) s
+--     -- ^ Transitions in the DFA
+--   , start :: s
+--     -- ^ Initial starting state
+--   , finals :: Set s
+--     -- ^ Final states
+--   } deriving (Show, Eq)
+
+simulateDFA :: Show a => Show s => Ord s => Ord a => [a] -> DFA (Set s) a -> Bool
+simulateDFA xs enfa@DFA {..} = go xs start
+  where
+    go [] s = s `S.member` finals
+    go (x:xs) s =
+      case M.lookup (s,x) trans of
+        Nothing -> False
+        Just set' -> go xs set'
+

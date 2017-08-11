@@ -28,7 +28,7 @@ instance ParseRecord Options where
 main :: IO ()
 main = do
   Options {..} <- getRecord "regex-fsm"
-  case parse regexParser "regex" regex :: Either ParseError (Reg Char) of
+  case parseRegex regex :: Either ParseError (Reg Char) of
     Left err -> do
       putStrLn "Failed to parse, error:"
       print err

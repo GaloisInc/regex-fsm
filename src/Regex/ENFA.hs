@@ -22,6 +22,8 @@ module Regex.ENFA
   , (-|)
     -- * Thompson's construction
   , thompsons
+     -- * Tests
+  , simulateENFA
   ) where
 
 import           Control.Applicative
@@ -30,6 +32,7 @@ import qualified Data.Map            as M
 import           Data.Monoid
 import           Data.Set            (Set)
 import qualified Data.Set            as S
+import Debug.Trace
 
 import           Regex.Types
 
@@ -111,10 +114,19 @@ thompsons = flip evalState 0 . go
     newState = modify (+1) >> get
 
 -- | Handle running a enfa
-simulate :: Ord s => Ord a => [a] -> ENFA s a -> Bool
-simulate xs enfa@ENFA {..} = go xs start
+simulateENFA :: Show a => Show s => Ord s => Ord a => [a] -> ENFA s a -> Bool
+simulateENFA [] _ = False
+simulateENFA xs enfa@ENFA {..} = go xs start
   where
-    go [] s = s `S.member` final
+    go [] s =
+      case M.lookup s trans of
+        Nothing -> s `S.member` final
+        Just map' ->
+          case M.lookup Nothing map' of
+            Nothing -> False
+            Just k ->
+              flip any (S.toList k) $ \k' ->
+                k' `S.member` final
     go (x:xs) s =
       case M.lookup s trans of
         Nothing -> False
@@ -123,8 +135,6 @@ simulate xs enfa@ENFA {..} = go xs start
             Nothing ->
               case M.lookup Nothing map' of
                 Nothing -> False
-                Just k -> or $ map (go xs) (S.toList k)
+                Just k -> or $ map (go (x:xs)) $ S.toList k
             Just set' ->
               or $ map (go xs) (S.toList set')
-
-

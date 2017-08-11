@@ -1,11 +1,13 @@
-{-# LANGUAGE FlexibleContexts       #-}
 {-# LANGUAGE DuplicateRecordFields  #-}
 {-# LANGUAGE MultiParamTypeClasses  #-}
+{-# LANGUAGE DeriveDataTypeable     #-}
+{-# LANGUAGE FlexibleContexts       #-}
 {-# LANGUAGE TypeFamilies           #-}
 module Regex.Types where
 
 import           Control.Monad.State
 import           Data.Default
+import           Data.Data
 import           Data.Map            (Map)
 import qualified Data.Map            as M
 import           Data.Set            (Set, insert)
@@ -25,7 +27,7 @@ data Reg a
   -- ^ Literal, ex. a
   | Eps
   -- ^ Epsilon, ex. ""
-  deriving (Show)
+  deriving (Show, Data)
 
 instance Functor Reg where
   fmap _ Eps = Eps
