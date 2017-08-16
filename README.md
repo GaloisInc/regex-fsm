@@ -20,4 +20,14 @@ cabal install -j --depedencies-only
 cabal build
 ```
 
+## Building with `nix`
 
+To build
+```
+nix-build
+```
+
+To develop `regex-fsm`
+```
+nix-shell -A regex-fsm.env
+```
