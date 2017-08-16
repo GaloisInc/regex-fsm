@@ -1,7 +1,13 @@
-{ pkgs ? import <nixpkgs> {}, compiler ? "ghc802" }:
+{ nixpkgs ? import <nixpkgs> {} }:
 let
+  pkgs = import (nixpkgs.fetchFromGitHub {
+    owner = "NixOS";
+    repo = "nixpkgs";
+    rev = "a3dec324633727e7c541f6ef40aa0a8e80f66549";
+    sha256 = "01r1sws35p4p6bpa20jdgnbijhi4dykj41m1az5q6dia6ilaq1hz";
+  }) {};
   inherit (pkgs) fetchFromGitHub;
-  inherit (pkgs.haskellPackages) callCabal2nix;
+  inherit (pkgs.haskell.packages.ghc821) callCabal2nix;
   optparse-generic = callCabal2nix "optparse-generic" (fetchFromGitHub {
     owner = "Gabriel439";
     repo = "Haskell-Optparse-Generic-Library";
@@ -53,24 +59,49 @@ let
       rev = "d59fb1677ab0b3d83acee9f2416549f1ab0cb468";
     };
   };
-  obfuscator = pkgs.stdenv.mkDerivation {
-    name = "obfuscator";
-    NIX_LDFLAGS = "-lmpfr -lgmp -lflint -lmmap -laesrand -loz";
-    buildInputs = with pkgs; [ autoreconfHook libaesrand clt13 libmmap flint gmp mpfr openssl gghlite-flint python27 pythonPackages.setuptools pythonPackages.numpy ];
-    src = fetchFromGitHub {
-      owner = "5GenCrypto";
-      repo = "obfuscation";
-      sha256 = "05h401dfapl6jwn4nfhxzzs9kaddn0hb13b6sbas7ir71lb6g847";
-      rev = "9e1346088c1ded29be8898b3a3ed24dcab801d6f";
-    };
-    postInstall = ''
-      ls -lah
-      mkdir -p $out/bin
-      python2 setup.py test
-      cp obfuscator $out/bin
-    '';
+  obfuscator-src = fetchFromGitHub {
+    owner = "5GenCrypto";
+    repo = "obfuscation";
+    sha256 = "05h401dfapl6jwn4nfhxzzs9kaddn0hb13b6sbas7ir71lb6g847";
+    rev = "9e1346088c1ded29be8898b3a3ed24dcab801d6f";
   };
-  regex-fsm = pkgs.haskellPackages.callPackage ./regex-fsm.nix { inherit optparse-generic; };
+  obfuscator-c = pkgs.stdenv.mkDerivation {
+    name = "obfuscator-c";
+    NIX_LDFLAGS = "-lmpfr -lgmp -lflint -lmmap -laesrand -loz";
+    buildInputs =
+      with pkgs; [
+        autoreconfHook
+	libaesrand
+	clt13
+	libmmap
+	flint
+	gmp
+	mpfr
+	openssl
+	gghlite-flint
+     ];
+    src = obfuscator-src;
+  };
+  obfuscator = pkgs.pythonPackages.buildPythonPackage {
+    name = "obfuscator";
+    NIX_LDFLAGS = "-lmpfr -lgmp -lflint -lmmap -laesrand -loz -lobf";
+    propagatedBuildInputs = with pkgs.pythonPackages; [ numpy ];
+    buildInputs = with pkgs; [
+	gghlite-flint
+	libaesrand
+	clt13
+	libmmap
+	flint
+	gmp
+	mpfr
+        obfuscator-c
+	python27
+	pythonPackages.setuptools
+	pythonPackages.numpy
+    ];
+    src = obfuscator-src;
+  };
+  regex-fsm = pkgs.haskellPackages.callPackage ./regex-fsm.nix {};
 in
   pkgs.runCommand "regex-fsm" { inherit regex-fsm obfuscator; } ''
     mkdir -p $out/bin
