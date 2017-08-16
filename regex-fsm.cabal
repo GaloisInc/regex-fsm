@@ -23,6 +23,7 @@ executable regex-fsm
     data-default,
     fgl,
     fgl-visualize,
+    matrix,
     mtl,
     optparse-generic,
     parsec,
@@ -42,17 +43,18 @@ test-suite tests
   hs-source-dirs:
     src, test
   build-depends:
-                QuickCheck,
-                base < 5,
-                boltzmann-samplers,
-                containers,
-                data-default,
-                fgl,
-                hspec,
-                mtl,
-                parsec,
-                pretty-show,
-                quickcheck-instances
+    QuickCheck,
+    base < 5,
+    boltzmann-samplers,
+    containers,
+    data-default,
+    fgl,
+    hspec,
+    matrix,
+    mtl,
+    parsec,
+    pretty-show,
+    quickcheck-instances
   other-modules:
     Regex
   default-language:

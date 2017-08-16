@@ -11,11 +11,11 @@ import Text.Show.Pretty
 
 import Regex
 
--- | Example `./regex-fsm --regex (a|b)|(a|b) --input ab
+-- | Example `./regex-fsm --regex (a|b)|(a|b) --inputLength 5
 data Options
   = Options
   { regex :: String
-  , inputLength :: String
+  , inputLength :: Int
   } deriving (Show, Eq, Generic)
 
 modifiers :: Modifiers

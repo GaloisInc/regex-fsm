@@ -207,17 +207,13 @@ equivalentToRewrite s = M.fromListWith max
   , let [src,trgt] = sort [l,r]
   ]
 
--- data DFA s a
---   = DFA
---   { trans :: Map (s, a) s
---     -- ^ Transitions in the DFA
---   , start :: s
---     -- ^ Initial starting state
---   , finals :: Set s
---     -- ^ Final states
---   } deriving (Show, Eq)
-
-simulateDFA :: Show a => Show s => Ord s => Ord a => [a] -> DFA (Set s) a -> Bool
+simulateDFA
+  :: Show a
+  => Show s
+  => Ord s
+  => Ord a
+  => [a]
+  -> DFA (Set s) a -> Bool
 simulateDFA xs enfa@DFA {..} = go xs start
   where
     go [] s = s `S.member` finals

@@ -113,9 +113,8 @@ thompsons = flip evalState 0 . go
     newState :: Num s => State s s
     newState = modify (+1) >> get
 
--- | Handle running a enfa
+-- | Handle running a ENFA
 simulateENFA :: Show a => Show s => Ord s => Ord a => [a] -> ENFA s a -> Bool
-simulateENFA [] _ = False
 simulateENFA xs enfa@ENFA {..} = go xs start
   where
     go [] s =
