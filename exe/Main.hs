@@ -4,7 +4,6 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 module Main ( main ) where
 
-import Data.Graph.Inductive.Dot
 import Options.Generic
 import Text.ParserCombinators.Parsec
 import Text.Show.Pretty

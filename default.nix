@@ -7,7 +7,7 @@ let
     sha256 = "01r1sws35p4p6bpa20jdgnbijhi4dykj41m1az5q6dia6ilaq1hz";
   }) {};
   inherit (pkgs) fetchFromGitHub;
-  inherit (pkgs.haskell.packages.ghc821) callCabal2nix;
+  inherit (pkgs.haskellPackages) callCabal2nix;
   optparse-generic = callCabal2nix "optparse-generic" (fetchFromGitHub {
     owner = "Gabriel439";
     repo = "Haskell-Optparse-Generic-Library";
