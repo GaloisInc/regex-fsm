@@ -34,7 +34,28 @@ executable regex-fsm
     optparse-generic,
     parsec,
     pretty-show,
-    text
+    text,
+    unordered-containers
+  hs-source-dirs:
+    src, exe
+  default-language:
+    Haskell2010
+
+executable json2ntl
+  main-is:
+    json2ntl.hs
+  other-modules:
+    Regex.Types
+  build-depends:
+    aeson,
+    base < 5,
+    bytestring,
+    containers,
+    data-default,
+    matrix,
+    mtl,
+    text,
+    unordered-containers
   hs-source-dirs:
     src, exe
   default-language:
