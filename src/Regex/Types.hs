@@ -35,7 +35,7 @@ instance ToJSON Matrices where
           getSteps = map go (zip [0 :: Int ..] listOfMapOfMatrices)
           go (i, map') =
             let Object hm = toJSON map'
-                Object o = object [ pack "position" .= toJSON i ]
+                Object o = object [ pack "position" .= toJSON (show i) ]
             in Object (hm <> o)
 
 instance ToJSON (Matrix Int) where
