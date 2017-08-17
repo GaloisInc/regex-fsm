@@ -16,6 +16,12 @@ executable regex-fsm
     Main.hs
   other-modules:
     Regex
+    Regex.Closure,
+    Regex.DFA,
+    Regex.ENFA,
+    Regex.MBP,
+    Regex.Parse,
+    Regex.Types
   build-depends:
     aeson,
     base < 5,
