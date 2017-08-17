@@ -131,3 +131,13 @@ main =
         test "b" `shouldBe` True
         test (replicate 100 'a') `shouldBe` True
         test (replicate 100 'b') `shouldBe` True
+
+      it "Should successfully simulate (a*|b*)abc(a*|b*) on a MBP" $ do
+        let Right regex = parseRegex "(a*|b*)abc(a*|b*)"
+            dfa = minimize $ subset (thompsons regex)
+            test x = simulateMBP x (toMatrices (length x) dfa)
+        test "a" `shouldBe` False
+        test "b" `shouldBe` False
+        test "c" `shouldBe` False
+        test "abc" `shouldBe` True
+        test "aabcaa" `shouldBe` True
