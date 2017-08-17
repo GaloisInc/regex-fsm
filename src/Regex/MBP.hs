@@ -13,6 +13,7 @@ import           Data.Maybe
 import           Data.Set
 import qualified Data.Set            as S
 import           Regex.DFA
+import           Data.List
 
 buildStep
   :: Ord s
@@ -48,8 +49,9 @@ toMatrices
   -> [ Map a (Matrix Int) ]
 toMatrices inputLength dfa@DFA{..} = updatedMatrices
   where
-    updatedMatrices =
-      init matrices ++ [ M.map (`multStd` bookend) (last matrices) ]
+    updatedMatrices
+      | Prelude.null matrices = []
+      | otherwise = init matrices ++ [ M.map (`multStd` bookend) (last matrices) ]
     bookend = constructBookend srcs finals
     (matrices, srcs) =
       flip runState (S.singleton start)
@@ -87,74 +89,16 @@ toMatrices inputLength dfa@DFA{..} = updatedMatrices
         ]
 
 simulateMBP :: Ord a => [a] -> [ Map a (Matrix Int) ] -> Bool
-simulateMBP input matrices = zeroTest
+simulateMBP input matrices = zeroTest && validate
   where
-    result =
-      foldl1 multStd $
-        catMaybes $
-          zipWith M.lookup input matrices
+    result = zipWith M.lookup input matrices
+    validate =
+      if length result /= length input
+        then False
+        else True
     zeroTest =
-      case Matrix.toList result of
-        [1, 0] -> True
-        _      -> False
-
--- Regex: (a*|b*)
-
--- final matrices look like:
--- "a"
--- ( 0 0 0 )
--- ( 1 0 0 )
--- ( 0 0 0 )
-
--- "b"
--- ( 0 0 0 )
--- ( 0 0 0 )
--- ( 0 0 1 )
-
---- bbbbb = ( 0 0 1 ) -- this should be a match
-bbbbb = putStrLn $ prettyMatrix $
-  fromLists [[0, 1]] `multStd`
-  fromLists [[1,0,0],[0,0,1]] `multStd`
-  fromLists [[1,0,0],[1,0,0],[0,0,1]] `multStd`
-  fromLists [[1,0,0],[1,0,0],[0,0,1]] `multStd`
-  fromLists [[1,0,0],[1,0,0],[0,0,1]] `multStd`
-  fromLists [[0,0,0],[0,0,0],[0,0,1]] -- final state matrix
-
---- aaaaa ( 1 0 0 ) -- this should be a match
-aaaaa = putStrLn $ prettyMatrix $
-  fromLists [[1, 0]] `multStd`
-  fromLists [[0,1,0],[1,0,0]] `multStd`
-  fromLists [[1,0,0],[0,1,0],[1,0,0]] `multStd`
-  fromLists [[1,0,0],[0,1,0],[1,0,0]] `multStd`
-  fromLists [[1,0,0],[0,1,0],[1,0,0]] `multStd`
-  fromLists [[0,0,0],[1,0,0],[0,0,0]] -- final state matrix
-
---- baaaa ( 0 0 0 ) -- this should not be a match
-baaaa = putStrLn $ prettyMatrix $
-  fromLists [[0, 1]] `multStd`
-  fromLists [[0,1,0],[1,0,0]] `multStd`
-  fromLists [[1,0,0],[0,1,0],[1,0,0]] `multStd`
-  fromLists [[1,0,0],[0,1,0],[1,0,0]] `multStd`
-  fromLists [[1,0,0],[0,1,0],[1,0,0]] `multStd`
-  fromLists [[0,0,0],[1,0,0],[0,0,0]] -- final state matrix
-
---- aaaab ( 0 0 0 ) -- this should not be a match
-aaaab = putStrLn $ prettyMatrix $
-  fromLists [[0, 1]] `multStd`
-  fromLists [[0,1,0],[1,0,0]] `multStd`
-  fromLists [[1,0,0],[0,1,0],[1,0,0]] `multStd`
-  fromLists [[1,0,0],[0,1,0],[1,0,0]] `multStd`
-  fromLists [[1,0,0],[0,1,0],[1,0,0]] `multStd`
-  fromLists [[0,0,0],[0,0,0],[0,0,1]] -- final state matrix
-
---- aaaab ( 0 0 0 ) -- this should not be a match
-aabab = putStrLn $ prettyMatrix $
-  fromLists [[0, 1]] `multStd`
-  fromLists [[0,1,0],[1,0,0]] `multStd`
-  fromLists [[1,0,0],[1,0,0],[0,0,1]] `multStd`
-  fromLists [[1,0,0],[0,1,0],[1,0,0]] `multStd`
-  fromLists [[1,0,0],[0,1,0],[1,0,0]] `multStd`
-  fromLists [[0,0,0],[0,0,0],[0,0,1]] -- final state matrix
-
-
-
+      case catMaybes result of
+        [] -> False
+        xs -> case Matrix.toList $ foldl1 multStd xs of
+            [1, 0] -> True
+            _      -> False

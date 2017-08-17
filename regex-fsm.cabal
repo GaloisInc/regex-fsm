@@ -17,15 +17,18 @@ executable regex-fsm
   other-modules:
     Regex
   build-depends:
+    aeson,
     base < 5,
     boltzmann-samplers,
+    bytestring,
     containers,
     data-default,
     matrix,
     mtl,
     optparse-generic,
     parsec,
-    pretty-show
+    pretty-show,
+    text
   hs-source-dirs:
     src, exe
   default-language:
@@ -42,6 +45,7 @@ test-suite tests
     src, test
   build-depends:
     QuickCheck,
+    aeson,
     base < 5,
     boltzmann-samplers,
     containers,
@@ -51,7 +55,8 @@ test-suite tests
     mtl,
     parsec,
     pretty-show,
-    quickcheck-instances
+    quickcheck-instances,
+    text
   other-modules:
     Regex
   default-language:

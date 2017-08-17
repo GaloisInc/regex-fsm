@@ -1,6 +1,6 @@
-{ mkDerivation, base, boltzmann-samplers, containers, data-default
-, hspec, matrix, mtl, optparse-generic, parsec, pretty-show
-, QuickCheck, quickcheck-instances, stdenv
+{ mkDerivation, aeson, base, boltzmann-samplers, containers
+, data-default, hspec, matrix, mtl, optparse-generic, parsec
+, pretty-show, QuickCheck, quickcheck-instances, stdenv
 }:
 mkDerivation {
   pname = "regex-fsm";
@@ -9,7 +9,7 @@ mkDerivation {
   isLibrary = false;
   isExecutable = true;
   executableHaskellDepends = [
-    base boltzmann-samplers containers data-default matrix mtl
+    aeson base boltzmann-samplers containers data-default matrix mtl
     optparse-generic parsec pretty-show
   ];
   testHaskellDepends = [
