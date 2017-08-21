@@ -1,3 +1,4 @@
+{-# LANGUAGE ScopedTypeVariables #-}
 module Main where
 
 import Control.Monad
@@ -14,22 +15,23 @@ import qualified Data.Map as M
 
 sequentialPositions :: [Step] -> Bool
 sequentialPositions steps =
-  map position steps == zipWith (const . pack . show) [0..] steps
+  map position steps == zipWith (const . pack . show) [0 :: Int ..] steps
 
 sanityCheckAlphabet :: [Step] -> IO ()
 sanityCheckAlphabet steps = case map (M.keysSet . branches) steps of
   [] -> die "No steps!"
   s:ss -> id
        . mapM_ warn
-       . filter (\(i, s') -> s /= s')
+       . filter ((/= s) . snd)
        . zip [1..]
        $ ss
     where
-    warn (i, s') = putStrLn
-      $  "WARNING: Alphabet " ++ show s'
-      ++ " at position " ++ show i
-      ++ " does not match alphabet " ++ show s
-      ++ " at position 0."
+      warn (i :: Int, s') = putStrLn . unlines $ [
+          "WARNING: Alphabet " ++ show s'
+        , " at position " ++ show i
+        , " does not match alphabet " ++ show s
+        , " at position 0."
+        ]
 
 maxSize :: [Step] -> Int
 maxSize steps = maximum

@@ -14,6 +14,8 @@ extra-source-files:  ChangeLog.md
 executable regex-fsm
   main-is:
     Main.hs
+  ghc-options:
+    -Wall -O2 -threaded -fdicts-cheap -funbox-strict-fields
   other-modules:
     Regex
     Regex.Closure,
@@ -44,6 +46,8 @@ executable regex-fsm
 executable json2ntl
   main-is:
     json2ntl.hs
+  ghc-options:
+    -Wall -O2 -threaded -fdicts-cheap -funbox-strict-fields
   other-modules:
     Regex.Types
   build-depends:
@@ -65,7 +69,7 @@ test-suite tests
   type:
     exitcode-stdio-1.0
   ghc-options:
-    -O2
+    -Wall -O2 -threaded -fdicts-cheap -funbox-strict-fields
   main-is:
     Main.hs
   hs-source-dirs:
@@ -93,3 +97,36 @@ test-suite tests
 source-repository head
   type:     git
   location: https://github.com/GaloisInc/regex-fsm
+
+benchmark benchmarks
+  type:
+    exitcode-stdio-1.0
+  main-is:
+    Main.hs
+  ghc-options:
+    -Wall -O2 -threaded -fdicts-cheap -funbox-strict-fields
+  hs-source-dirs:
+    src, bench
+  default-language:
+    Haskell2010
+  other-modules:
+    Regex
+    Regex.Closure,
+    Regex.DFA,
+    Regex.ENFA,
+    Regex.MBP,
+    Regex.Parse,
+    Regex.Types
+  build-depends:
+    aeson,
+    base >=4.8 && <4.10,
+    containers,
+    criterion,
+    matrix,
+    mtl >=2.2 && <2.3,
+    parsec,
+    unordered-containers >=0.2 && <0.3,
+    text
+
+
+

@@ -13,7 +13,6 @@ import           Data.Maybe
 import           Data.Set
 import qualified Data.Set            as S
 import           Regex.DFA
-import           Data.List
 
 buildStep
   :: Ord s
@@ -58,29 +57,14 @@ toMatrices inputLength dfa@DFA{..} = updatedMatrices
         $ replicateM inputLength
         $ state (buildStep dfa)
 
-    alphabet = snd <$> M.keys trans
-
-    finalMatrices =
-      M.fromList $ do
-        a <- alphabet
-        pure (a, createFinalMatrix a)
-
-    createFinalMatrix a = [
-        [ if M.lookup (src, a) trans == Just tgt
-            then 1
-            else 0
-        | tgt <- S.toAscList finals
-        ]
-      | src <- S.toAscList srcs
-      ]
     constructBookend
       :: Ord s
       => Set s
       -> Set s
       -> Matrix Int
-    constructBookend sources finalStates = bookend
+    constructBookend sources finalStates = result
      where
-       bookend = fromLists
+       result = fromLists
         [ x
         | s <- S.toAscList sources
         , let x = if s `S.member` finalStates

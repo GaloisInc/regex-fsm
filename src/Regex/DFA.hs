@@ -28,7 +28,7 @@ import           Data.Maybe
 import           Data.Monoid
 import           Data.Set            (Set)
 import qualified Data.Set            as S
-import           Debug.Trace
+
 
 import           Regex.Closure       (getClosure)
 import           Regex.Types         (ENFA(..))
@@ -53,19 +53,19 @@ subset enfa@ENFA {..} = getDFA
       transMap = M.insert (newState, a) nextState transMap
     }
     -- Take the DFA transitions accumulated, and actually construct a DFA
-    constructDFA trans =
+    constructDFA trans' =
       DFA {
         -- DFA start state *is* e-closure
         start = closureMap M.! start
       , finals =
           S.filter (\set -> set `S.intersection` final /= S.empty)
-            $ getAllStates trans
-      , ..
+            $ getAllStates trans'
+      , trans = trans'
       }
-    getAllStates trans =
-      S.fromList (M.elems trans)
+    getAllStates trans' =
+      S.fromList (M.elems trans')
         `S.union`
-           S.map fst (S.fromList $ M.keys trans)
+           S.map fst (S.fromList $ M.keys trans')
     -- Empty DFA state
     emptyState = DFSState mempty mempty mempty
     hasVisited s = elem s <$> gets visited
@@ -106,13 +106,13 @@ subset enfa@ENFA {..} = getDFA
                     -- Lookup state transitions
                     transMap <- M.lookup e trans
                     -- Lookup transitions at this specific symbol
-                    states <- M.lookup (Just a) transMap
+                    states' <- M.lookup (Just a) transMap
                     -- Of states we can transition to (via non-epsilon transitions)
                     -- include all other states reachable in their epsilon closure.
                     pure $ S.unions
                          . S.toList
                          . S.map (fromMaybe S.empty . flip M.lookup closureMap)
-                         $ states
+                         $ states'
               -- Record this state, visit it later
               addDFATrans newState a nextState
               pushStack nextState
@@ -141,12 +141,12 @@ data DFA s a
 -- For every regular language L, there exists a unique, minimal DFA that recognizes L
 minimize :: Show s => (Ord a, Ord s) => DFA (Set s) a -> DFA (Set s) a
 minimize dfa@DFA {..} =
-  DFA { trans = update dfa
+  DFA { trans = update
       , start = rewrite start
       , finals = S.map rewrite finals
       }
   where
-    update dfa@DFA {..} =
+    update =
         M.fromList
       . map (\((s,a),s') -> ((rewrite s, a), rewrite s'))
       . M.toList
@@ -214,7 +214,7 @@ simulateDFA
   => Ord a
   => [a]
   -> DFA (Set s) a -> Bool
-simulateDFA xs enfa@DFA {..} = go xs start
+simulateDFA xs' DFA {..} = go xs' start
   where
     go [] s = s `S.member` finals
     go (x:xs) s =

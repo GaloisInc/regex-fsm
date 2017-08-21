@@ -4,3 +4,4 @@ result
 .DS_Store
 *.json
 n*_L*.txt
+/index.html

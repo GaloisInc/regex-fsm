@@ -26,13 +26,12 @@ module Regex.ENFA
   , simulateENFA
   ) where
 
-import           Control.Applicative
-import           Control.Monad.State
+
+import           Control.Monad.State hiding (state)
 import qualified Data.Map            as M
-import           Data.Monoid
+
 import           Data.Set            (Set)
 import qualified Data.Set            as S
-import Debug.Trace
 
 import           Regex.Types
 
@@ -115,7 +114,7 @@ thompsons = flip evalState 0 . go
 
 -- | Handle running a ENFA
 simulateENFA :: Show a => Show s => Ord s => Ord a => [a] -> ENFA s a -> Bool
-simulateENFA xs enfa@ENFA {..} = go xs start
+simulateENFA xs' ENFA {..} = go xs' start
   where
     go [] s =
       case M.lookup s trans of

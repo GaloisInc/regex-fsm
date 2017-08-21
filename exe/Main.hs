@@ -4,14 +4,14 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 module Main ( main ) where
 
-import Control.Monad
-import Options.Generic
-import Text.ParserCombinators.Parsec
-import Text.Show.Pretty
-import Data.Aeson
-import qualified Data.ByteString.Lazy as BL
+import           Control.Monad
+import           Data.Aeson                    hiding (json)
+import qualified Data.ByteString.Lazy          as BL
+import           Options.Generic
+import           Text.ParserCombinators.Parsec
+import           Text.Show.Pretty
 
-import Regex
+import           Regex
 
 -- | Example `./regex-fsm --regex (a|b)|(a|b) --inputLength 5 --verbose True
 data Options
@@ -36,22 +36,23 @@ main = do
     Left err -> do
       putStrLn "Failed to parse, error:"
       print err
-    Right regex -> do
-      let json =
-           encode $ Matrices inputLength
-                  $ toMatrices inputLength . minimize . subset . thompsons
-                  $ regex
-      BL.writeFile output json
+    Right regex' -> do
+      let thompson  = thompsons regex'
+          closure   = getClosure thompson
+          subset'   = subset thompson
+          minimized = minimize subset'
+          matrices  = toMatrices inputLength minimized
+      BL.writeFile output $ encode (Matrices inputLength matrices)
       when (verbose == Just True) $ do
         putStrLn "== Regular Expression AST =="
-        pPrint regex
+        pPrint regex'
         putStrLn "== Thompson's construction =="
-        pPrint . thompsons $ regex
+        pPrint (thompson :: ENFA Int Char)
         putStrLn "== Closure construction =="
-        pPrint . getClosure . thompsons $ regex
+        pPrint closure
         putStrLn "== Subset construction =="
-        pPrint . subset . thompsons $ regex
+        pPrint subset'
         putStrLn "== Minimized DFA =="
-        pPrint . minimize . subset . thompsons $ regex
+        pPrint minimized
         putStrLn "== Matrix Branching Program =="
-        pPrint . toMatrices inputLength . minimize . subset . thompsons $ regex
+        pPrint matrices

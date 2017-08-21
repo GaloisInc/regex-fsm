@@ -1,6 +1,7 @@
-{ mkDerivation, aeson, base, boltzmann-samplers, containers
-, data-default, hspec, matrix, mtl, optparse-generic, parsec
-, pretty-show, QuickCheck, quickcheck-instances, stdenv
+{ mkDerivation, aeson, base, boltzmann-samplers, bytestring
+, containers, criterion, data-default, hspec, matrix, mtl
+, optparse-generic, parsec, pretty-show, QuickCheck
+, quickcheck-instances, stdenv, text, unordered-containers
 }:
 mkDerivation {
   pname = "regex-fsm";
@@ -9,13 +10,16 @@ mkDerivation {
   isLibrary = false;
   isExecutable = true;
   executableHaskellDepends = [
-    aeson base boltzmann-samplers containers data-default matrix mtl
-    optparse-generic parsec pretty-show
+    aeson base boltzmann-samplers bytestring containers data-default
+    matrix mtl optparse-generic parsec pretty-show text
+    unordered-containers
   ];
   testHaskellDepends = [
-    base boltzmann-samplers containers data-default hspec matrix mtl
-    parsec pretty-show QuickCheck quickcheck-instances
+    aeson base boltzmann-samplers containers data-default hspec matrix
+    mtl parsec pretty-show QuickCheck quickcheck-instances text
+    unordered-containers criterion
   ];
+  benchmarkHaskellDepends = [ criterion ];
   homepage = "https://github.com/GaloisInc/regex-fsm";
   description = "Convert regular expressions to finite state machines";
   license = stdenv.lib.licenses.bsd3;

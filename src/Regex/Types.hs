@@ -1,4 +1,4 @@
-{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE FlexibleInstances      #-}
 {-# LANGUAGE DuplicateRecordFields  #-}
 {-# LANGUAGE MultiParamTypeClasses  #-}
 {-# LANGUAGE DeriveDataTypeable     #-}
@@ -6,18 +6,19 @@
 {-# LANGUAGE FlexibleContexts       #-}
 {-# LANGUAGE TypeFamilies           #-}
 {-# LANGUAGE ScopedTypeVariables    #-}
+{-# LANGUAGE ScopedTypeVariables    #-}
+{-# OPTIONS_GHC -fno-warn-orphans   #-}
 module Regex.Types where
 
 import           Control.Monad.State
 import           Data.Aeson
 import           Data.Data
-import           Data.Default
 import qualified Data.HashMap.Strict as HM
 import           Data.Map            (Map)
 import qualified Data.Map            as M
 import           Data.Matrix
 import           Data.Monoid
-import           Data.Set            (Set, insert)
+import           Data.Set            (Set)
 import           Data.Text           (Text, pack)
 
 type Transition s a = Map s (Map (Maybe a) (Set s))
@@ -54,20 +55,20 @@ data Step = Step
 
 instance FromJSON Step where
   parseJSON = withObject "step" $ \o -> do
-    position <- o .: "position"
-    branches <- parseJSON (Object (HM.delete "position" o))
-    case M.elems branches of
+    position' <- o .: "position"
+    branches' <- parseJSON (Object (HM.delete "position" o))
+    case M.elems branches' of
       [] -> fail "each step must have at least one branch"
-      b:bs | all (\b' -> dims b == dims b') bs -> return (Step (dims b) position branches)
+      b:bs | all (\b' -> dims b == dims b') bs -> return (Step (dims b) position' branches')
            | otherwise -> fail "all branches in the step must have the same dimensions"
-    where dims matrix = (nrows matrix, ncols matrix)
+    where dims matrix' = (nrows matrix', ncols matrix')
 
 -- | Type used to convert into json output
 data Matrices = Matrices Int [ Map Char (Matrix Int) ]
   deriving (Show, Eq)
 
 instance ToJSON Matrices where
-  toJSON (Matrices inputLength listOfMapOfMatrices)
+  toJSON (Matrices _ listOfMapOfMatrices)
     = object [ "steps" .= toJSON getSteps
              , "outputs" .= toJSON ([["false", "true"]] :: [[String]])
              ]

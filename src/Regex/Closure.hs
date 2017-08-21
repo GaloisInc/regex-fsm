@@ -4,10 +4,7 @@
 module Regex.Closure where
 
 import           Control.Monad.State
-import           Data.Function
 import qualified Data.Map            as M
-import           Data.Maybe
-import           Data.Monoid
 import           Data.Set            (Set)
 import qualified Data.Set            as S
 
@@ -21,15 +18,15 @@ getClosure :: Ord s => Ord a => ENFA s a -> EpsClosure s
 getClosure ENFA {..} = M.fromList $ zip xs $ flip dfs trans <$> xs
   where
     xs = S.toList states
-    dfs start trans = epsClosure $ execState go DFSState {
-      toVisit = [start]
-    , epsClosure = S.singleton start
+    dfs s trans' = epsClosure $ execState go DFSState {
+      toVisit = [s]
+    , epsClosure = S.singleton s
     , visited = mempty
     } where
         go = fix $ \loop -> do
           maybeS <- popStack
           forM_ maybeS $ \someState ->
-            forM_ (M.lookup someState trans) $ \transitionMap ->
+            forM_ (M.lookup someState trans') $ \transitionMap ->
               forM_ (M.lookup Nothing transitionMap) $ \epsTransitions -> do
                 forM_ epsTransitions $ \e -> do
                   visited <- hasVisited e
@@ -39,9 +36,9 @@ getClosure ENFA {..} = M.fromList $ zip xs $ flip dfs trans <$> xs
                     addToClosure e
                     loop
         addToClosure v = do
-          s <- get
+          s' <- get
           ec <- gets epsClosure
-          put s { epsClosure = S.insert v ec }
+          put s' { epsClosure = S.insert v ec }
 
 hasVisited
   :: (MonadState (DFSState a) f, Eq a)
