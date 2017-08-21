@@ -1,3 +1,5 @@
+{-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE TemplateHaskell     #-}
 {-# LANGUAGE FlexibleContexts    #-}
 {-# LANGUAGE RecordWildCards     #-}
@@ -28,7 +30,8 @@ import           Data.Maybe
 import           Data.Monoid
 import           Data.Set            (Set)
 import qualified Data.Set            as S
-
+import           GHC.Generics
+import           Control.DeepSeq
 
 import           Regex.Closure       (getClosure)
 import           Regex.Types         (ENFA(..))
@@ -134,7 +137,9 @@ data DFA s a
     -- ^ Initial starting state
   , finals :: Set s
     -- ^ Final states
-  } deriving (Show, Eq)
+  } deriving (Show, Eq, Generic)
+
+instance NFData (DFA (Set Int) Char)
 
 -- | Minimize a DFA
 -- Two DFAs are called equivalent if they recognize the same regular language.

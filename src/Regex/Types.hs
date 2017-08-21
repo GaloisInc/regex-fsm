@@ -1,3 +1,4 @@
+{-# LANGUAGE DeriveGeneric          #-}
 {-# LANGUAGE FlexibleInstances      #-}
 {-# LANGUAGE DuplicateRecordFields  #-}
 {-# LANGUAGE MultiParamTypeClasses  #-}
@@ -18,6 +19,8 @@ import           Data.Map            (Map)
 import qualified Data.Map            as M
 import           Data.Matrix
 import           Data.Monoid
+import           GHC.Generics
+import           Control.DeepSeq
 import           Data.Set            (Set)
 import           Data.Text           (Text, pack)
 
@@ -103,7 +106,9 @@ data Reg a
   -- ^ Literal, ex. a
   | Eps
   -- ^ Epsilon, ex. ""
-  deriving (Show, Data)
+  deriving (Show, Data, Generic)
+
+instance NFData (Reg Char)
 
 instance Functor Reg where
   fmap _ Eps         = Eps
@@ -124,6 +129,8 @@ data ENFA s a
          -- ^ Final states
          , states :: Set s
          -- ^ List of all states
-         } deriving (Show, Eq)
+         } deriving (Show, Eq, Generic)
+
+instance NFData (ENFA Int Char)
 
 type Stack a = [a]
