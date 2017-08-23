@@ -68,8 +68,8 @@ toMatrices inputLength dfa@DFA{..} = updatedMatrices
         [ x
         | s <- S.toAscList sources
         , let x = if s `S.member` finalStates
-                    then [1,0]
-                    else [0,1]
+                    then [0]
+                    else [1]
         ]
 
 simulateMBP :: Ord a => [a] -> [ Map a (Matrix Int) ] -> Bool
@@ -84,5 +84,5 @@ simulateMBP input matrices = zeroTest && validate
       case catMaybes result of
         [] -> False
         xs -> case Matrix.toList $ foldl1 multStd xs of
-            [1, 0] -> True
-            _      -> False
+            [0] -> True
+            _   -> False
