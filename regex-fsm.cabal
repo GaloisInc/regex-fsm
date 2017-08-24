@@ -11,6 +11,11 @@ license-file:        LICENSE
 cabal-version:       >=1.10
 extra-source-files:  ChangeLog.md
 
+flag obfuscator-tests
+  description: Run tests with obfuscator on PATH
+  default: False
+  manual: False
+
 executable regex-fsm
   main-is:
     Main.hs
@@ -82,15 +87,18 @@ test-suite tests
     aeson >=1.1 && <1.3,
     base >=4.8 && <4.10,
     boltzmann-samplers >=0.1 && <0.2,
+    bytestring,
     containers >=0.5 && <0.6,
     criterion,
     data-default >=0.7 && <0.8,
     deepseq,
+    directory,
     hspec >=2.4 && <2.5,
     matrix >=0.3 && <0.4,
     mtl >=2.2 && <2.3,
     parsec >=3.1 && <3.2,
     pretty-show >=1.6 && <1.7,
+    process >=1.4 && <1.7,
     quickcheck-instances >=0.3 && <0.4,
     text >=1.2 && <1.3,
     unordered-containers >=0.2 && <0.3
@@ -98,6 +106,47 @@ test-suite tests
     Regex
   default-language:
     Haskell2010
+
+test-suite obfuscator-tests
+  if !flag(obfuscator-tests)
+    main-is:
+      Obfuscator.hs
+    type:
+      exitcode-stdio-1.0
+    buildable: False
+  else
+    type:
+      exitcode-stdio-1.0
+    ghc-options:
+      -Wall -O2 -threaded -fdicts-cheap -funbox-strict-fields
+    main-is:
+      Obfuscator.hs
+    hs-source-dirs:
+      src, test
+    build-depends:
+      QuickCheck >=2.9 && <2.10,
+      aeson >=1.1 && <1.3,
+      base >=4.8 && <4.10,
+      boltzmann-samplers >=0.1 && <0.2,
+      bytestring,
+      containers >=0.5 && <0.6,
+      criterion,
+      data-default >=0.7 && <0.8,
+      deepseq,
+      directory,
+      hspec >=2.4 && <2.5,
+      matrix >=0.3 && <0.4,
+      mtl >=2.2 && <2.3,
+      parsec >=3.1 && <3.2,
+      pretty-show >=1.6 && <1.7,
+      process >=1.4 && <1.7,
+      quickcheck-instances >=0.3 && <0.4,
+      text >=1.2 && <1.3,
+      unordered-containers >=0.2 && <0.3
+    other-modules:
+      Regex
+    default-language:
+      Haskell2010
 
 source-repository head
   type:     git

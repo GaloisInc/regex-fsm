@@ -3,12 +3,13 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 module Main where
 
-import           Boltzmann.Data
-import           Data.Set
-import           Data.Data
-import           Test.Hspec
-import           Test.QuickCheck
-import           Regex
+import Boltzmann.Data
+import Data.Data
+import Data.Set
+import Test.Hspec
+import Test.QuickCheck
+
+import Regex
 
 instance (Data a, Arbitrary a) => Arbitrary (Reg a) where
   arbitrary = sized $ generatorPWith [positiveInts]

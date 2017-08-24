@@ -8,6 +8,7 @@ let
   }) {};
   inherit (pkgs) fetchFromGitHub;
   inherit (pkgs.haskellPackages) callCabal2nix;
+  inherit (pkgs.haskell.lib) addExtraLibrary enableCabalFlag;
   optparse-generic = callCabal2nix "optparse-generic" (fetchFromGitHub {
     owner = "Gabriel439";
     repo = "Haskell-Optparse-Generic-Library";
@@ -101,11 +102,16 @@ let
     ];
     src = obfuscator-src;
   };
-  regex-fsm = pkgs.haskellPackages.callPackage ./regex-fsm.nix {};
+  regex-fsm =
+     let
+       x = enableCabalFlag (pkgs.haskellPackages.callPackage ./regex-fsm.nix {}) "obfuscator-tests";
+     in
+       pkgs.lib.overrideDerivation x (drv: {
+         buildInputs = drv.buildInputs ++ [ obfuscator ];
+       });
 in
   pkgs.runCommand "regex-fsm" { inherit regex-fsm obfuscator; } ''
     mkdir -p $out/bin
     ln -s ${obfuscator}/bin/obfuscator $out/bin/obfuscator
     ln -s ${regex-fsm}/bin/regex-fsm $out/bin/regex-fsm
   ''
-

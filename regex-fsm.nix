@@ -1,6 +1,6 @@
 { mkDerivation, aeson, base, boltzmann-samplers, bytestring
 , containers, criterion, data-default, deepseq, hspec, matrix, mtl
-, optparse-generic, parsec, pretty-show, QuickCheck
+, optparse-generic, parsec, pretty-show, process, QuickCheck
 , quickcheck-instances, stdenv, text, unordered-containers
 }:
 mkDerivation {
@@ -16,11 +16,11 @@ mkDerivation {
   ];
   testHaskellDepends = [
     aeson base boltzmann-samplers containers criterion data-default
-    deepseq hspec matrix mtl parsec pretty-show QuickCheck
+    deepseq hspec matrix mtl parsec pretty-show process QuickCheck
     quickcheck-instances text unordered-containers
   ];
   benchmarkHaskellDepends = [
-    aeson base containers criterion matrix mtl parsec text
+    aeson base containers criterion deepseq matrix mtl parsec text
     unordered-containers
   ];
   homepage = "https://github.com/GaloisInc/regex-fsm";
