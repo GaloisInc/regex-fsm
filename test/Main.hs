@@ -178,3 +178,37 @@ main =
         test "aabcaa" `shouldBe` False
         test "01" `shouldBe` False
         test "11" `shouldBe` False
+
+      it "Should successfully simulate 01110101000010010110011010000011 on a premultiplied MBP" $ do
+        let Right regex = parseRegex "01110101000010010110011010000011"
+            input = "01110101000010010110011010000011" :: String
+            dfa :: DFA (Set Int) Char = minimize $ subset (thompsons regex)
+            test n = simulateMBPChunks n input $ toMatrices (length input) dfa
+        test 16 `shouldBe` True
+        test 8  `shouldBe` True
+        test 4 `shouldBe` True
+        test 2 `shouldBe` True
+        test 1 `shouldBe` True
+
+      it "Should successfully simulate 1(0|1)(0|1)1(0|1)01(0|1)000001101010101010(0|1)101(0|1)(0|1) on a premultiplied MBP" $ do
+        let Right regex = parseRegex "1(0|1)(0|1)1(0|1)01(0|1)000001101010101010(0|1)101(0|1)(0|1)"
+            input = "10010010000001101010101010010100" :: String
+            dfa :: DFA (Set Int) Char = minimize $ subset (thompsons regex)
+            test n = simulateMBPChunks n input $ toMatrices (length input) dfa
+        test 16 `shouldBe` True
+        test 8  `shouldBe` True
+        test 4 `shouldBe` True
+        test 2 `shouldBe` True
+        test 1 `shouldBe` True
+
+      it "Should successfully simulate (0|1)*0101010000110000(0|1)* on a MBP" $ do
+        let Right regex = parseRegex "(0|1)*0101010000110000(0|1)*"
+            input = "000001010100001100001111" :: String
+            dfa :: DFA (Set Int) Char = minimize $ subset (thompsons regex)
+            test n = simulateMBPChunks n input $ toMatrices (length input) dfa
+        test 12 `shouldBe` True
+        test 8  `shouldBe` True
+        test 4 `shouldBe` True
+        test 3 `shouldBe` True
+        test 2 `shouldBe` True
+        test 1 `shouldBe` True

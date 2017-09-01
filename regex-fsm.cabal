@@ -43,6 +43,7 @@ executable regex-fsm
     optparse-generic >=1.2 && <1.3,
     parsec >=3.1 && <3.2,
     pretty-show >=1.6 && <1.7,
+    split >= 0.2 && < 0.3,
     text >=1.2 && <1.3,
     unordered-containers >=0.2 && <0.3
   hs-source-dirs:
@@ -66,6 +67,7 @@ executable json2ntl
     deepseq,
     matrix >=0.3 && <0.4,
     mtl >=2.2 && <2.3,
+    split >= 0.2 && < 0.3,
     text >=1.2 && <1.3,
     unordered-containers >=0.2 && <0.3
   hs-source-dirs:
@@ -100,6 +102,7 @@ test-suite tests
     pretty-show >=1.6 && <1.7,
     process >=1.4 && <1.7,
     quickcheck-instances >=0.3 && <0.4,
+    split >= 0.2 && < 0.3,
     text >=1.2 && <1.3,
     unordered-containers >=0.2 && <0.3
   other-modules:
@@ -141,6 +144,7 @@ test-suite obfuscator-tests
       pretty-show >=1.6 && <1.7,
       process >=1.4 && <1.7,
       quickcheck-instances >=0.3 && <0.4,
+      split >= 0.2 && < 0.3,
       text >=1.2 && <1.3,
       unordered-containers >=0.2 && <0.3
     other-modules:
@@ -182,6 +186,3 @@ benchmark benchmarks
     parsec,
     unordered-containers >=0.2 && <0.3,
     text
-
-
-

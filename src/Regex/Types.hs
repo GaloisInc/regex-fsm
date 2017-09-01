@@ -67,7 +67,7 @@ instance FromJSON Step where
     where dims matrix' = (nrows matrix', ncols matrix')
 
 -- | Type used to convert into json output
-data Matrices = Matrices Int [ Map Char (Matrix Int) ]
+data Matrices = Matrices Int [ Map String (Matrix Int) ]
   deriving (Show, Eq)
 
 instance ToJSON Matrices where

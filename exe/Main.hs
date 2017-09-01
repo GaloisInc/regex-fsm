@@ -7,6 +7,7 @@ module Main ( main ) where
 import           Control.Monad
 import           Data.Aeson                    hiding (json)
 import qualified Data.ByteString.Lazy          as BL
+import qualified Data.Map                      as M
 import           Options.Generic
 import           Text.ParserCombinators.Parsec
 import           Text.Show.Pretty
@@ -41,7 +42,7 @@ main = do
           closure   = getClosure thompson
           subset'   = subset thompson
           minimized = minimize subset'
-          matrices  = toMatrices inputLength minimized
+          matrices  = M.mapKeys pure <$> toMatrices inputLength minimized
       BL.writeFile output $ encode (Matrices inputLength matrices)
       when (verbose == Just True) $ do
         putStrLn "== Regular Expression AST =="

@@ -3,7 +3,7 @@
 {-# LANGUAGE RecordWildCards     #-}
 {-# LANGUAGE FlexibleContexts    #-}
 {-# LANGUAGE ScopedTypeVariables #-}
-module Regex.MBP ( toMatrices, simulateMBP ) where
+module Regex.MBP ( toMatrices, simulateMBP, premultiply, simulateMBPChunks ) where
 
 import           Control.Monad.State
 import           Data.Map
@@ -13,6 +13,20 @@ import           Data.Maybe
 import           Data.Set
 import qualified Data.Set            as S
 import           Regex.DFA
+import           Data.List.Split
+
+premultiply
+  :: Int
+  -> [Map String (Matrix Int)]
+  -> [Map String (Matrix Int)]
+premultiply n ms | length ms `mod` n /= 0 = error "Chunk size must be a multiple of input size"
+premultiply n ms = Prelude.map go (chunksOf n ms)
+  where
+    go :: [Map String (Matrix Int)] -> Map String (Matrix Int)
+    go xs =
+      M.fromList [ (pairs >>= fst, foldl1 multStd (Prelude.map snd pairs))
+                 | pairs <- mapM M.assocs xs
+                 ]
 
 buildStep
   :: Ord s
@@ -86,3 +100,21 @@ simulateMBP input matrices = zeroTest && validate
         xs -> case Matrix.toList $ foldl1 multStd xs of
             [0] -> True
             _   -> False
+
+simulateMBPChunks
+  :: Int
+  -> [Char]
+  -> [Map Char (Matrix Int)]
+  -> Bool
+simulateMBPChunks chunks input matrices = zeroTest
+  where
+    result =
+      zipWith M.lookup (chunksOf chunks input)
+        $ premultiply chunks (M.mapKeys pure <$> matrices)
+    zeroTest =
+      case catMaybes result of
+        [] -> False
+        xs -> case Matrix.toList $ foldl1 multStd xs of
+            [0] -> True
+            _   -> False
+
