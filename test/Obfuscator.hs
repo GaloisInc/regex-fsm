@@ -6,6 +6,7 @@ module Main where
 import           Control.Monad
 import           Data.Aeson
 import qualified Data.ByteString.Lazy as BL
+import qualified Data.Map             as M
 import           Data.Set
 import           System.Process
 import           Test.Hspec
@@ -52,7 +53,7 @@ testWithEvalObfuscator :: RegexString -> ProcessArg -> Int -> Bool -> IO ()
 testWithEvalObfuscator str arg n r = do
   let Right regex = parseRegex str
       dfa :: DFA (Set Int) Char = minimize $ subset (thompsons regex)
-      test = Matrices n (toMatrices n dfa)
+      test = Matrices n $ M.mapKeys pure <$> toMatrices n dfa
       fileName = "output.json"
   BL.writeFile fileName (encode test)
   (code, out, err) <- readProcessWithExitCode "obfuscator"
@@ -84,7 +85,7 @@ testObfuscatorWithSecurity
 testObfuscatorWithSecurity str arg n secParam r = do
   let Right regex = parseRegex str
       dfa :: DFA (Set Int) Char = minimize $ subset (thompsons regex)
-      test = Matrices n (toMatrices n dfa)
+      test = Matrices n $ M.mapKeys pure <$> toMatrices n dfa
       fileName = "output.json"
   BL.writeFile fileName (encode test)
   result <- readProcessWithExitCode "obfuscator"
