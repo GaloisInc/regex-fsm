@@ -6,71 +6,80 @@ module Main where
 import           Control.Monad
 import           Data.Aeson
 import qualified Data.ByteString.Lazy as BL
+import           Data.IORef
 import qualified Data.Map             as M
 import           Data.Set
 import           System.Process
-import           Test.Hspec
+import           System.Random
 
 import           Regex
 
+pointFunctions :: IO [String]
+pointFunctions = forM [32,36..64] point
+
+infixPointFunctions :: IO [String]
+infixPointFunctions = forM [32,36..64] infixPoint
+
+conjunctionFunctions :: IO [String]
+conjunctionFunctions = forM [32,36..64] conjunctions
+
+conjunctions :: Int -> IO String
+conjunctions n =
+  concatMap go <$> do
+    replicateM n $ randomRIO (0 :: Int, 2)
+    where
+      go 0 = "0"
+      go 1 = "1"
+      go 2 = "(0|1)"
+      go _ = error "impossible"
+
+infixPoint :: Int -> IO String
+infixPoint n = go <$> point (n - 16)
+  where
+    go s = "(0|1)*" ++ s ++ "(0|1)*"
+
+point :: Int -> IO [Char]
+point n = do
+  concatMap show <$> do
+    replicateM n $ randomRIO (0 :: Int, 1)
+
+randomInput :: Int -> IO [Char]
+randomInput = point
+
+incr :: IORef Int -> IO Int
+incr ref = modifyIORef ref (+1) >> readIORef ref
+
 main :: IO ()
-main =
-  hspec $ do
-    describe "obfuscator tests" $ do
-      it "Should successfully zero-test using the obfuscator tool, without security" $ do
-        testWithEvalObfuscator "0" "0" 1 True
-        testWithEvalObfuscator "(01|10)" "10" 2 True
-        testWithEvalObfuscator "101010101" "101010101" (length ("101010101" :: String)) True
-        testWithEvalObfuscator "(0|1)*" "010101" 6 True
-        testWithEvalObfuscator "0*" "000" 3 True
-        testWithEvalObfuscator "(0|1)*" (concat $ replicate 200 "01") 400 True
-        testWithEvalObfuscator "(0|1)*0101010000110000(0|1)*" "0101010000110000" (length ("0101010000110000" :: String)) True
-        testWithEvalObfuscator "1(0|1)(0|1)1(0|1)01(0|1)000001101010101010(0|1)101(0|1)(0|1)" "10010010000001101010101010110101" (length ("10010010000001101010101010110101" :: String)) True
-        testWithEvalObfuscator "01110101000010010110011010000011" "01110101000010010110011010000011" (length ("01110101000010010110011010000011" :: String)) True
-        testWithEvalObfuscator "01110101000010010110011010000011" "01110101000010010110011010000010" (length ("01110101000010010110011010000010" :: String)) False
+main = do
+  ref <- newIORef (0 :: Int)
+  putStrLn "Point function tests"
+  pfs <- pointFunctions
+  forM_ pfs $ \pf -> do
+    n <- incr ref
+    putStrLn $ "Test number: " ++ show n
+    putStrLn $ "(Regex, Input): " ++ show (pf, pf)
+    testObfuscatorWithSecurity pf pf (length pf) 40
 
-      it "Should successfully zero-test using the obfuscator tool, with security" $ do
-        testObfuscatorWithSecurity "0" "0" 1 50 True
-        testObfuscatorWithSecurity "(01|10)" "01" 2 50 True
-        testObfuscatorWithSecurity "(01|10)" "10" 2 50 True
-        testObfuscatorWithSecurity "101010101" "101010101" (length ("101010101" :: String)) 40 True
+  putStrLn "Conjunction function tests"
+  cfs <- conjunctionFunctions
+  forM_ (zip [32,36..64] cfs) $ \(k,cf) -> do
+    n <- incr ref
+    xs <- point k
+    putStrLn $ "Test number: " ++ show n
+    putStrLn $ "(Regex, Input): " ++ show (cf, xs)
+    testObfuscatorWithSecurity cf xs (length xs) 40
 
-        --  flint-addons.c:40: fmpz_mat_det_modp: Assertion `n >= 1' failed.
-        -- testObfuscatorWithSecurity "0*" "000" 3 40 True -- strange case
-
-        --  flint-addons.c:40: fmpz_mat_det_modp: Assertion `n >= 1' failed.
-        -- testObfuscatorWithSecurity "(0|1)*" (concat $ replicate 200 "01") 400 40 True
-
-        testObfuscatorWithSecurity "(0|1)*0101010000110000(0|1)*" "0101010000110000" (length ("0101010000110000" :: String)) 40 True
-        testObfuscatorWithSecurity "1(0|1)(0|1)1(0|1)01(0|1)000001101010101010(0|1)101(0|1)(0|1)" "10010010000001101010101010110101" (length ("10010010000001101010101010110101" :: String)) 40 True
-        testObfuscatorWithSecurity "01110101000010010110011010000011" "01110101000010010110011010000011" (length ("01110101000010010110011010000011" :: String)) 40 True
-        testObfuscatorWithSecurity "01110101000010010110011010000011" "01110101000010010110011010000010" (length ("01110101000010010110011010000010" :: String)) 40 False
+  putStrLn "Infix function tests"
+  ipfs <- infixPointFunctions
+  forM_ (zip [32,36..64] ipfs) $ \(i,cf) -> do
+    n <- incr ref
+    xs' <- point i
+    putStrLn $ "Test number: " ++ show n
+    putStrLn $ "(Regex, Input): " ++ show (cf, xs')
+    testObfuscatorWithSecurity cf xs' (length xs') 40
 
 type RegexString = String
 type ProcessArg = String
-
-testWithEvalObfuscator :: RegexString -> ProcessArg -> Int -> Bool -> IO ()
-testWithEvalObfuscator str arg n r = do
-  let Right regex = parseRegex str
-      dfa :: DFA (Set Int) Char = minimize $ subset (thompsons regex)
-      test = Matrices n $ M.mapKeys pure <$> toMatrices n dfa
-      fileName = "output.json"
-  BL.writeFile fileName (encode test)
-  (code, out, err) <- readProcessWithExitCode "obfuscator"
-    [ "bp"
-    , "--load"
-    , fileName
-    , "--eval"
-    , arg
-    ] []
-  void $ system "rm -r output.json"
-  case words out of
-    ["Output", "=", x] ->
-       case read x :: Int of
-         n' -> (if n' == 0 then True else False) `shouldBe` r
-    _ -> do
-      print code
-      error err
 
 type SecParam = Int
 type Length = Int
@@ -80,34 +89,31 @@ testObfuscatorWithSecurity
   -> ProcessArg
   -> Length
   -> SecParam
-  -> Bool
   -> IO ()
-testObfuscatorWithSecurity str arg n secParam r = do
+testObfuscatorWithSecurity str arg n secParam = do
   let Right regex = parseRegex str
       dfa :: DFA (Set Int) Char = minimize $ subset (thompsons regex)
       test = Matrices n $ M.mapKeys pure <$> toMatrices n dfa
       fileName = "output.json"
   BL.writeFile fileName (encode test)
-  result <- readProcessWithExitCode "obfuscator"
+  putStrLn "Obfuscating"
+  e' <- readProcess "./result/bin/obfuscator"
     [ "obf"
     , "--load"
     , fileName
     , "--secparam"
     , show secParam
+    , "--verbose"
     ] []
-  print result
-  (code, out, err) <- readProcessWithExitCode "obfuscator"
+  mapM_ print (lines e')
+  putStrLn "Evaluating"
+  e <- readProcess "./result/bin/obfuscator"
     [ "obf"
     , "--load-obf"
     , fileName ++ ".obf." ++ show secParam
     , "--eval"
     , arg
+    , "--verbose"
     ] []
+  mapM_ print (lines e)
   void $ system "rm -r output.json.obf*"
-  case words out of
-    ["Output", "=", x] ->
-       case read x :: Int of
-         n' -> (if n' == 0 then True else False) `shouldBe` r
-    _ -> do
-      print code
-      error err

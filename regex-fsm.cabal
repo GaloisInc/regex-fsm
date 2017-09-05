@@ -110,16 +110,7 @@ test-suite tests
   default-language:
     Haskell2010
 
-test-suite obfuscator-tests
-  if !flag(obfuscator-tests)
-    main-is:
-      Obfuscator.hs
-    type:
-      exitcode-stdio-1.0
-    buildable: False
-  else
-    type:
-      exitcode-stdio-1.0
+executable obfuscator-tests
     ghc-options:
       -Wall -O2 -threaded -fdicts-cheap -funbox-strict-fields
     main-is:
@@ -137,13 +128,12 @@ test-suite obfuscator-tests
       data-default >=0.7 && <0.8,
       deepseq,
       directory,
-      hspec >=2.4 && <2.5,
       matrix >=0.3 && <0.4,
       mtl >=2.2 && <2.3,
       parsec >=3.1 && <3.2,
       pretty-show >=1.6 && <1.7,
       process >=1.4 && <1.7,
-      quickcheck-instances >=0.3 && <0.4,
+      random,
       split >= 0.2 && < 0.3,
       text >=1.2 && <1.3,
       unordered-containers >=0.2 && <0.3
