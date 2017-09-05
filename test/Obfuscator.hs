@@ -9,6 +9,7 @@ import qualified Data.ByteString.Lazy as BL
 import           Data.IORef
 import qualified Data.Map             as M
 import           Data.Set
+import           System.IO
 import           System.Process
 import           System.Random
 
@@ -52,30 +53,30 @@ incr ref = modifyIORef ref (+1) >> readIORef ref
 main :: IO ()
 main = do
   ref <- newIORef (0 :: Int)
-  putStrLn "Point function tests"
+  hPutStrLn stderr "Point function tests"
   pfs <- pointFunctions
   forM_ pfs $ \pf -> do
     n <- incr ref
-    putStrLn $ "Test number: " ++ show n
-    putStrLn $ "(Regex, Input): " ++ show (pf, pf)
+    hPutStrLn stderr $ "Test number: " ++ show n
+    hPutStrLn stderr $ "(Regex, Input): " ++ show (pf, pf)
     testObfuscatorWithSecurity pf pf (length pf) 40
 
-  putStrLn "Conjunction function tests"
+  hPutStrLn stderr "Conjunction function tests"
   cfs <- conjunctionFunctions
   forM_ (zip [32,36..64] cfs) $ \(k,cf) -> do
     n <- incr ref
     xs <- point k
-    putStrLn $ "Test number: " ++ show n
-    putStrLn $ "(Regex, Input): " ++ show (cf, xs)
+    hPutStrLn stderr $ "Test number: " ++ show n
+    hPutStrLn stderr $ "(Regex, Input): " ++ show (cf, xs)
     testObfuscatorWithSecurity cf xs (length xs) 40
 
-  putStrLn "Infix function tests"
+  hPutStrLn stderr "Infix function tests"
   ipfs <- infixPointFunctions
   forM_ (zip [32,36..64] ipfs) $ \(i,cf) -> do
     n <- incr ref
     xs' <- point i
-    putStrLn $ "Test number: " ++ show n
-    putStrLn $ "(Regex, Input): " ++ show (cf, xs')
+    hPutStrLn stderr $ "Test number: " ++ show n
+    hPutStrLn stderr $ "(Regex, Input): " ++ show (cf, xs')
     testObfuscatorWithSecurity cf xs' (length xs') 40
 
 type RegexString = String
@@ -96,7 +97,7 @@ testObfuscatorWithSecurity str arg n secParam = do
       test = Matrices n $ M.mapKeys pure <$> toMatrices n dfa
       fileName = "output.json"
   BL.writeFile fileName (encode test)
-  putStrLn "Obfuscating"
+  hPutStrLn stderr "Obfuscating"
   e' <- readProcess "./result/bin/obfuscator"
     [ "obf"
     , "--load"
@@ -105,8 +106,8 @@ testObfuscatorWithSecurity str arg n secParam = do
     , show secParam
     , "--verbose"
     ] []
-  mapM_ print (lines e')
-  putStrLn "Evaluating"
+  mapM_ (hPutStrLn stderr) (lines e')
+  hPutStrLn stderr "Evaluating"
   e <- readProcess "./result/bin/obfuscator"
     [ "obf"
     , "--load-obf"
@@ -115,5 +116,5 @@ testObfuscatorWithSecurity str arg n secParam = do
     , arg
     , "--verbose"
     ] []
-  mapM_ print (lines e)
+  mapM_ (hPutStrLn stderr) (lines e)
   void $ system "rm -r output.json.obf*"
