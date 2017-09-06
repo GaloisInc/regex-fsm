@@ -45,8 +45,8 @@ let
     src = fetchFromGitHub {
       owner = "5GenCrypto";
       repo = "gghlite-flint";
-      sha256 = "00c3q824zcsnszcbx4s30azyhiy5nv2ar469gyynxvyblc4kz91a";
-      rev = "375d0e222cdb15cb3c32a9ab7d81c216c7b84428";
+      sha256 = "0nczz5kmhzdmqfrkpjb2yfzprnckz7dajj3z325s9flv57xbkmr9";
+      rev = "6efde93edaccef98133de747438d27d4fc76daa3";
     };
   };
   libmmap = pkgs.stdenv.mkDerivation {
