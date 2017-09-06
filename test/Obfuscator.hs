@@ -8,10 +8,13 @@ import           Data.Aeson
 import qualified Data.ByteString.Lazy as BL
 import           Data.IORef
 import qualified Data.Map             as M
+import           Data.Maybe
 import           Data.Set
+import           System.Environment
 import           System.IO
 import           System.Process
 import           System.Random
+import           Text.Read
 
 import           Regex
 
@@ -50,8 +53,18 @@ randomInput = point
 incr :: IORef Int -> IO Int
 incr ref = modifyIORef ref (+1) >> readIORef ref
 
+
+getSecParam :: IO (Maybe Int)
+getSecParam = do
+  args <- getArgs
+  pure $ case args of
+    [n] -> readMaybe n
+    _ -> Nothing
+
 main :: IO ()
 main = do
+  secParam <- fromMaybe 40 <$> getSecParam
+  putStrLn $ "Security Parameter of: " ++ show secParam
   ref <- newIORef (0 :: Int)
   hPutStrLn stderr "Point function tests"
   pfs <- pointFunctions
@@ -59,7 +72,7 @@ main = do
     n <- incr ref
     hPutStrLn stderr $ "Test number: " ++ show n
     hPutStrLn stderr $ "(Regex, Input): " ++ show (pf, pf)
-    testObfuscatorWithSecurity pf pf (length pf) 40
+    testObfuscatorWithSecurity pf pf (length pf) secParam
 
   hPutStrLn stderr "Conjunction function tests"
   cfs <- conjunctionFunctions
@@ -68,7 +81,7 @@ main = do
     xs <- point k
     hPutStrLn stderr $ "Test number: " ++ show n
     hPutStrLn stderr $ "(Regex, Input): " ++ show (cf, xs)
-    testObfuscatorWithSecurity cf xs (length xs) 40
+    testObfuscatorWithSecurity cf xs (length xs) secParam
 
   hPutStrLn stderr "Infix function tests"
   ipfs <- infixPointFunctions
@@ -77,7 +90,7 @@ main = do
     xs' <- point i
     hPutStrLn stderr $ "Test number: " ++ show n
     hPutStrLn stderr $ "(Regex, Input): " ++ show (cf, xs')
-    testObfuscatorWithSecurity cf xs' (length xs') 40
+    testObfuscatorWithSecurity cf xs' (length xs') secParam
 
 type RegexString = String
 type ProcessArg = String
