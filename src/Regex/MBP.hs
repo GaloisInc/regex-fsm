@@ -17,14 +17,14 @@ import           Data.List.Split
 
 premultiply
   :: Int
-  -> [Map String (Matrix Int)]
+  -> [Map Char (Matrix Int)]
   -> [Map String (Matrix Int)]
 premultiply n ms | length ms `mod` n /= 0 = error "Chunk size must be a multiple of input size"
 premultiply n ms = Prelude.map go (chunksOf n ms)
   where
-    go :: [Map String (Matrix Int)] -> Map String (Matrix Int)
+    go :: [Map Char (Matrix Int)] -> Map String (Matrix Int)
     go xs =
-      M.fromList [ (pairs >>= fst, foldl1 multStd (Prelude.map snd pairs))
+      M.fromList [ (fst <$> pairs, foldl1 multStd (Prelude.map snd pairs))
                  | pairs <- mapM M.assocs xs
                  ]
 
@@ -110,7 +110,7 @@ simulateMBPChunks chunks input matrices = zeroTest
   where
     result =
       zipWith M.lookup (chunksOf chunks input)
-        $ premultiply chunks (M.mapKeys pure <$> matrices)
+        $ premultiply chunks matrices
     zeroTest =
       case catMaybes result of
         [] -> False
