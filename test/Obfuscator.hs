@@ -1,3 +1,5 @@
+{-# LANGUAGE RecordWildCards      #-}
+{-# LANGUAGE DeriveGeneric        #-}
 {-# LANGUAGE OverloadedStrings    #-}
 {-# LANGUAGE ScopedTypeVariables  #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
@@ -7,7 +9,6 @@ import           Control.Monad
 import           Data.Aeson
 import qualified Data.ByteString.Lazy as BL
 import           Data.IORef
-import qualified Data.Map             as M
 import           Data.Maybe
 import           Data.Set
 import           System.Environment
@@ -15,17 +16,18 @@ import           System.IO
 import           System.Process
 import           System.Random
 import           Text.Read
+import           Options.Generic
 
 import           Regex
 
 pointFunctions :: IO [String]
-pointFunctions = forM [32,36..64] point
+pointFunctions = forM [32,36..72] point
 
 infixPointFunctions :: IO [String]
-infixPointFunctions = forM [32,36..64] infixPoint
+infixPointFunctions = forM [32,36..72] infixPoint
 
 conjunctionFunctions :: IO [String]
-conjunctionFunctions = forM [32,36..64] conjunctions
+conjunctionFunctions = forM [32,36..72] conjunctions
 
 conjunctions :: Int -> IO String
 conjunctions n =
@@ -53,18 +55,44 @@ randomInput = point
 incr :: IORef Int -> IO Int
 incr ref = modifyIORef ref (+1) >> readIORef ref
 
-
 getSecParam :: IO (Maybe Int)
 getSecParam = do
   args <- getArgs
   pure $ case args of
     [n] -> readMaybe n
-    _ -> Nothing
+    _   -> Nothing
+
+-- | Example `./obfuscator-tests --secParam 40
+data Options
+  = Options
+  { runTestSuites :: Bool
+  , secParam :: Maybe Int
+  } deriving (Show, Eq, Generic)
+
+modifiers :: Modifiers
+modifiers = defaultModifiers { shortNameModifier = firstLetter }
+
+instance ParseRecord Options where
+  parseRecord = parseRecordWithModifiers modifiers
 
 main :: IO ()
 main = do
-  secParam <- fromMaybe 40 <$> getSecParam
-  putStrLn $ "Security Parameter of: " ++ show secParam
+  Options {..} <- getRecord "obfuscator-tests"
+  let secParam' = fromMaybe 40 secParam
+  case runTestSuites of
+    True -> runSuite
+    False -> do
+      putStrLn $ "Security Parameter of: " ++ show secParam'
+      oneShot secParam'
+
+runSuite :: IO ()
+runSuite = forM_ [40, 80] testSim
+
+oneShot :: Int -> IO ()
+oneShot = testSim
+
+testSim :: SecParam -> IO ()
+testSim s = do
   ref <- newIORef (0 :: Int)
   hPutStrLn stderr "Point function tests"
   pfs <- pointFunctions
@@ -72,25 +100,25 @@ main = do
     n <- incr ref
     hPutStrLn stderr $ "Test number: " ++ show n
     hPutStrLn stderr $ "(Regex, Input): " ++ show (pf, pf)
-    testObfuscatorWithSecurity pf pf (length pf) secParam
+    testObfuscatorWithSecurity pf pf (length pf) s 1
 
   hPutStrLn stderr "Conjunction function tests"
   cfs <- conjunctionFunctions
-  forM_ (zip [32,36..64] cfs) $ \(k,cf) -> do
+  forM_ (zip [32,36..72] cfs) $ \(k,cf) -> do
     n <- incr ref
     xs <- point k
     hPutStrLn stderr $ "Test number: " ++ show n
     hPutStrLn stderr $ "(Regex, Input): " ++ show (cf, xs)
-    testObfuscatorWithSecurity cf xs (length xs) secParam
+    testObfuscatorWithSecurity cf xs (length xs) s 1
 
   hPutStrLn stderr "Infix function tests"
   ipfs <- infixPointFunctions
-  forM_ (zip [32,36..64] ipfs) $ \(i,cf) -> do
+  forM_ (zip [32,36..72] ipfs) $ \(i,cf) -> do
     n <- incr ref
     xs' <- point i
     hPutStrLn stderr $ "Test number: " ++ show n
     hPutStrLn stderr $ "(Regex, Input): " ++ show (cf, xs')
-    testObfuscatorWithSecurity cf xs' (length xs') secParam
+    testObfuscatorWithSecurity cf xs' (length xs') s 1
 
 type RegexString = String
 type ProcessArg = String
@@ -103,11 +131,12 @@ testObfuscatorWithSecurity
   -> ProcessArg
   -> Length
   -> SecParam
+  -> Int
   -> IO ()
-testObfuscatorWithSecurity str arg n secParam = do
+testObfuscatorWithSecurity str arg n secParam chunks = do
   let Right regex = parseRegex str
       dfa :: DFA (Set Int) Char = minimize $ subset (thompsons regex)
-      test = Matrices n $ M.mapKeys pure <$> toMatrices n dfa
+      test = Matrices n $ premultiply chunks (toMatrices n dfa)
       fileName = "output.json"
   BL.writeFile fileName (encode test)
   hPutStrLn stderr "Obfuscating"

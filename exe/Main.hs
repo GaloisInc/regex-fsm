@@ -7,7 +7,7 @@ module Main ( main ) where
 import           Control.Monad
 import           Data.Aeson                    hiding (json)
 import qualified Data.ByteString.Lazy          as BL
-import qualified Data.Map                      as M
+import           Data.Maybe
 import           Options.Generic
 import           Text.ParserCombinators.Parsec
 import           Text.Show.Pretty
@@ -21,6 +21,7 @@ data Options
   , inputLength :: Int
   , verbose :: Maybe Bool
   , output :: String
+  , chunks :: Maybe Int
   } deriving (Show, Eq, Generic)
 
 modifiers :: Modifiers
@@ -35,14 +36,13 @@ main = do
   Options {..} <- getRecord "regex-fsm"
   case parseRegex regex :: Either ParseError (Reg Char) of
     Left err -> do
-      putStrLn "Failed to parse, error:"
-      print err
+      error $ "Failed to parse, error: " ++ show err
     Right regex' -> do
       let thompson  = thompsons regex'
           closure   = getClosure thompson
           subset'   = subset thompson
           minimized = minimize subset'
-          matrices  = M.mapKeys pure <$> toMatrices inputLength minimized
+          matrices  = premultiply (fromMaybe 1 chunks) $ toMatrices inputLength minimized
       BL.writeFile output $ encode (Matrices inputLength matrices)
       when (verbose == Just True) $ do
         putStrLn "== Regular Expression AST =="
