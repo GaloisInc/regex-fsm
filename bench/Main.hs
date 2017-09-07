@@ -1,12 +1,12 @@
 {-# LANGUAGE OverloadedStrings #-}
 module Main where
 
-import GHC.IO.Encoding
-import Criterion.Main
-import Data.Map
-import Data.Matrix
-import Data.Set
-import Regex
+import           Criterion.Main
+import           Data.Map
+import           Data.Matrix
+import           Data.Set
+import           GHC.IO.Encoding
+import           Regex
 
 parse :: String -> Reg Char
 parse r =
@@ -36,6 +36,14 @@ constructMatrix n =
     where
       toMatrices' :: Int -> DFA (Set Int) Char -> [Map Char (Matrix Int)]
       toMatrices' = toMatrices
+
+constructPremultiplied
+  :: Int
+  -> String
+  -> Int
+  -> [Map String (Matrix Int)]
+constructPremultiplied n str chunks =
+  premultiply chunks (constructMatrix n str)
 
 main :: IO ()
 main = do
@@ -87,4 +95,16 @@ main = do
              n = length l
          in nf (constructMatrix n) l)
     ]
+   , bgroup "Matrix construction with premultiplication"
+    [ bench "Matrix premultiplied 01110101000010010110011010000011"
+        (let l = "01110101000010010110011010000011" :: String
+         in nf (constructPremultiplied 32 l) 8)
+    , bench "matrix 1(0|1)(0|1)1(0|1)01(0|1)000001101010101010(0|1)101(0|1)(0|1)"
+        (let l = "1(0|1)(0|1)1(0|1)01(0|1)000001101010101010(0|1)101(0|1)(0|1)" :: String
+         in nf (constructPremultiplied 32 l) 8)
+    , bench "matrix (0|1)*0101010000110000(0|1)*"
+        (let l = "(0|1)*0101010000110000(0|1)*" :: String
+         in nf (constructPremultiplied 32 l) 8)
+    ]
+
    ]

@@ -2,7 +2,7 @@ name:                regex-fsm
 author:              David Johnson
 version:             0.1.0.0
 license:             BSD3
-synopsis:            Convert regular expressions to finite state machines
+synopsis:            Convert regular expressions to matrix branching programs
 homepage:            https://github.com/GaloisInc/regex-fsm
 category:            Language
 maintainer:          david@galois.com
@@ -151,9 +151,7 @@ source-repository head
   type:     git
   location: https://github.com/GaloisInc/regex-fsm
 
-benchmark benchmarks
-  type:
-    exitcode-stdio-1.0
+executable benchmarks
   main-is:
     Main.hs
   ghc-options:
@@ -175,6 +173,7 @@ benchmark benchmarks
     base >=4.8 && <4.10,
     containers,
     deepseq,
+    split,
     criterion,
     matrix,
     mtl >=2.2 && <2.3,
