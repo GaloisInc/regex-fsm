@@ -4,4 +4,4 @@ RUN nix-env -iA gitMinimal -f '<nixpkgs>'
 RUN git clone https://github.com/GaloisInc/regex-fsm
 WORKDIR regex-fsm
 RUN nix-build
-CMD ./result/bin/obfuscator-tests 80
+CMD ./result/bin/obfuscator-tests --runTestSuites
