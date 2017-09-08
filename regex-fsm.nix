@@ -1,7 +1,7 @@
-{ mkDerivation, aeson, base, boltzmann-samplers, bytestring
-, containers, criterion, data-default, deepseq, directory, hspec
-, matrix, mtl, optparse-generic, parsec, pretty-show, process
-, QuickCheck, quickcheck-instances, random, split, stdenv, text
+{ mkDerivation, aeson, base, bytestring, containers, criterion
+, data-default, deepseq, directory, hspec, matrix, mtl
+, optparse-generic, parsec, pretty-show, process
+, quickcheck-instances, random, split, stdenv, text
 , unordered-containers
 }:
 mkDerivation {
@@ -11,22 +11,16 @@ mkDerivation {
   isLibrary = false;
   isExecutable = true;
   executableHaskellDepends = [
-    aeson base boltzmann-samplers bytestring containers criterion
-    data-default deepseq directory hspec matrix mtl optparse-generic
-    parsec pretty-show process QuickCheck quickcheck-instances random
-    split text unordered-containers
+    aeson base bytestring containers criterion data-default deepseq
+    directory hspec matrix mtl optparse-generic parsec pretty-show
+    process quickcheck-instances random split text unordered-containers
   ];
   testHaskellDepends = [
-    aeson base boltzmann-samplers bytestring containers criterion
-    data-default deepseq directory hspec matrix mtl parsec pretty-show
-    process QuickCheck quickcheck-instances split text
-    unordered-containers
-  ];
-  benchmarkHaskellDepends = [
-    aeson base containers criterion deepseq matrix mtl parsec text
-    unordered-containers
+    aeson base bytestring containers criterion data-default deepseq
+    directory hspec matrix mtl parsec pretty-show process
+    quickcheck-instances split text unordered-containers
   ];
   homepage = "https://github.com/GaloisInc/regex-fsm";
-  description = "Convert regular expressions to finite state machines";
+  description = "Convert regular expressions to matrix branching programs";
   license = stdenv.lib.licenses.bsd3;
 }

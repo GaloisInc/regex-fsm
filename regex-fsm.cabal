@@ -19,49 +19,53 @@ flag obfuscator-tests
 executable regex-fsm
   main-is:
     Main.hs
-  ghc-options:
-    -Wall -O2 -threaded -fdicts-cheap -funbox-strict-fields
-  other-modules:
-    Regex
-    Regex.Closure,
-    Regex.DFA,
-    Regex.ENFA,
-    Regex.MBP,
-    Regex.Parse,
-    Regex.Types
-  build-depends:
-    aeson >=1.1 && <1.3,
-    base >=4.8 && <4.10,
-    boltzmann-samplers >=0.1 && <0.2,
-    bytestring >=0.10 && <0.11,
-    containers >=0.5 && <0.6,
-    criterion,
-    hspec,
-    quickcheck-instances,
-    data-default >=0.7 && <0.8,
-    deepseq,
-    matrix >=0.3 && <0.4,
-    mtl >=2.2 && <2.3,
-    optparse-generic >=1.2 && <1.3,
-    parsec >=3.1 && <3.2,
-    pretty-show >=1.6 && <1.7,
-    split >= 0.2 && < 0.3,
-    text >=1.2 && <1.3,
-    unordered-containers >=0.2 && <0.3
-  hs-source-dirs:
-    src, exe
-  default-language:
-    Haskell2010
+  if impl(ghcjs)
+    buildable: False
+  else
+    ghc-options:
+      -Wall -O2 -threaded -fdicts-cheap -funbox-strict-fields
+    other-modules:
+      Regex
+      Regex.Closure,
+      Regex.DFA,
+      Regex.ENFA,
+      Regex.MBP,
+      Regex.Parse,
+      Regex.Types
+    build-depends:
+      aeson,
+      base >=4.8 && <4.10,
+      bytestring >=0.10 && <0.11,
+      containers >=0.5 && <0.6,
+      criterion,
+      hspec,
+      data-default >=0.7 && <0.8,
+      deepseq,
+      matrix >=0.3 && <0.4,
+      mtl >=2.2 && <2.3,
+      optparse-generic >=1.2 && <1.3,
+      parsec >=3.1 && <3.2,
+      pretty-show >=1.6 && <1.7,
+      split >= 0.2 && < 0.3,
+      text >=1.2 && <1.3,
+      unordered-containers >=0.2 && <0.3
+    hs-source-dirs:
+      src, exe
+    default-language:
+      Haskell2010
 
 executable json2ntl
   main-is:
     json2ntl.hs
-  ghc-options:
+  if impl(ghcjs)
+    buildable: False
+  else
+   ghc-options:
     -Wall -O2 -threaded -fdicts-cheap -funbox-strict-fields
-  other-modules:
+   other-modules:
     Regex.Types
-  build-depends:
-    aeson >=1.1 && <1.3,
+   build-depends:
+    aeson,
     base >=4.8 && <4.10,
     bytestring >=0.10 && <0.11,
     containers >=0.5 && <0.6,
@@ -72,58 +76,60 @@ executable json2ntl
     split >= 0.2 && < 0.3,
     text >=1.2 && <1.3,
     unordered-containers >=0.2 && <0.3
-  hs-source-dirs:
+   hs-source-dirs:
     src, exe
-  default-language:
+   default-language:
     Haskell2010
 
 test-suite tests
-  type:
-    exitcode-stdio-1.0
-  ghc-options:
-    -Wall -O2 -threaded -fdicts-cheap -funbox-strict-fields
   main-is:
     Main.hs
-  hs-source-dirs:
-    src, test
-  build-depends:
-    QuickCheck >=2.9 && <2.10,
-    aeson >=1.1 && <1.3,
-    base >=4.8 && <4.10,
-    boltzmann-samplers >=0.1 && <0.2,
-    bytestring,
-    containers >=0.5 && <0.6,
-    criterion,
-    data-default >=0.7 && <0.8,
-    deepseq,
-    directory,
-    hspec >=2.4 && <2.5,
-    matrix >=0.3 && <0.4,
-    mtl >=2.2 && <2.3,
-    parsec >=3.1 && <3.2,
-    pretty-show >=1.6 && <1.7,
-    process >=1.4 && <1.7,
-    quickcheck-instances >=0.3 && <0.4,
-    split >= 0.2 && < 0.3,
-    text >=1.2 && <1.3,
-    unordered-containers >=0.2 && <0.3
-  other-modules:
-    Regex
-  default-language:
-    Haskell2010
-
-executable obfuscator-tests
+  type:
+    exitcode-stdio-1.0
+  if impl(ghcjs)
+    buildable: False
+  else
     ghc-options:
       -Wall -O2 -threaded -fdicts-cheap -funbox-strict-fields
-    main-is:
-      Obfuscator.hs
     hs-source-dirs:
       src, test
     build-depends:
-      QuickCheck >=2.9 && <2.10,
-      aeson >=1.1 && <1.3,
+      aeson,
       base >=4.8 && <4.10,
-      boltzmann-samplers >=0.1 && <0.2,
+      bytestring,
+      containers >=0.5 && <0.6,
+      criterion,
+      data-default >=0.7 && <0.8,
+      deepseq,
+      directory,
+      hspec >=2.4 && <2.5,
+      matrix >=0.3 && <0.4,
+      mtl >=2.2 && <2.3,
+      parsec >=3.1 && <3.2,
+      pretty-show >=1.6 && <1.7,
+      process >=1.4 && <1.7,
+      quickcheck-instances >=0.3 && <0.4,
+      split >= 0.2 && < 0.3,
+      text >=1.2 && <1.3,
+      unordered-containers >=0.2 && <0.3
+    other-modules:
+      Regex
+    default-language:
+      Haskell2010
+
+executable obfuscator-tests
+  main-is:
+    Obfuscator.hs
+  if impl(ghcjs)
+    buildable: False
+  else
+    ghc-options:
+      -Wall -O2 -threaded -fdicts-cheap -funbox-strict-fields
+    hs-source-dirs:
+      src, test
+    build-depends:
+      aeson,
+      base >=4.8 && <4.10,
       bytestring,
       containers >=0.5 && <0.6,
       criterion,
@@ -154,29 +160,56 @@ source-repository head
 executable benchmarks
   main-is:
     Main.hs
-  ghc-options:
-    -Wall -O2 -threaded -fdicts-cheap -funbox-strict-fields
-  hs-source-dirs:
-    src, bench
-  default-language:
-    Haskell2010
-  other-modules:
-    Regex
-    Regex.Closure,
-    Regex.DFA,
-    Regex.ENFA,
-    Regex.MBP,
-    Regex.Parse,
-    Regex.Types
-  build-depends:
-    aeson,
-    base >=4.8 && <4.10,
-    containers,
-    deepseq,
-    split,
-    criterion,
-    matrix,
-    mtl >=2.2 && <2.3,
-    parsec,
-    unordered-containers >=0.2 && <0.3,
-    text
+  if impl(ghcjs)
+    buildable: False
+  else
+    ghc-options:
+      -Wall -O2 -threaded -fdicts-cheap -funbox-strict-fields
+    hs-source-dirs:
+      src, bench
+    default-language:
+      Haskell2010
+    other-modules:
+      Regex
+      Regex.Closure,
+      Regex.DFA,
+      Regex.ENFA,
+      Regex.MBP,
+      Regex.Parse,
+      Regex.Types
+    build-depends:
+      aeson,
+      base >=4.8 && <4.10,
+      containers,
+      deepseq,
+      split,
+      criterion,
+      matrix,
+      mtl >=2.2 && <2.3,
+      parsec,
+      unordered-containers >=0.2 && <0.3,
+      text
+
+executable regex-web
+  main-is:
+    Main.hs
+  if !impl(ghcjs)
+    buildable: False
+  else
+    hs-source-dirs:
+      web, src
+    other-modules:
+      Regex
+      Regex.Closure,
+      Regex.DFA,
+      Regex.ENFA,
+      Regex.MBP,
+      Regex.Parse,
+      Regex.Types
+    build-depends:
+      aeson,
+      base,
+      containers,
+      miso
+    default-language:
+      Haskell2010

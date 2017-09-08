@@ -6,9 +6,15 @@ let
     rev = "a3dec324633727e7c541f6ef40aa0a8e80f66549";
     sha256 = "01r1sws35p4p6bpa20jdgnbijhi4dykj41m1az5q6dia6ilaq1hz";
   }) {};
+  miso-nixpkgs = import (nixpkgs.fetchFromGitHub {
+    owner = "NixOS";
+    repo = "nixpkgs";
+    rev = "01c3847b9c656d3829dd947395aacd0f84178eb2";
+    sha256 = "0pkv5lnl2ywm2lb3jc97fny8zzc42n6gl2i7fs5sk99aa1d34x5b";
+  }) {};
   inherit (pkgs) fetchFromGitHub;
   inherit (pkgs.haskellPackages) callCabal2nix;
-  inherit (pkgs.haskell.lib) addExtraLibrary enableCabalFlag dontCheck;
+  inherit (pkgs.haskell.lib) addExtraLibrary enableCabalFlag disableCabalFlag dontCheck;
   optparse-generic = callCabal2nix "optparse-generic" (fetchFromGitHub {
     owner = "Gabriel439";
     repo = "Haskell-Optparse-Generic-Library";
@@ -102,18 +108,26 @@ let
     ];
     src = obfuscator-src;
   };
+  miso = miso-nixpkgs.haskell.packages.ghcjs.callCabal2nix "miso" (fetchFromGitHub {
+    owner = "dmjio";
+    repo = "miso";
+    sha256 = "0d86filzfm3aa0s0pmfmmlsib2qwmg4wzq2zbc48dvp1a2cw67w6";
+    rev = "55e5927a21fc4ff3504e0f861c35c342990a3989";
+  }) {};
   regex-fsm =
      let
-       x = enableCabalFlag (pkgs.haskellPackages.callPackage ./regex-fsm.nix {}) "obfuscator-tests";
+       x = enableCabalFlag (pkgs.haskellPackages.callPackage ./regex-fsm.nix { inherit optparse-generic; }) "obfuscator-tests";
      in
        pkgs.lib.overrideDerivation x (drv: {
          buildInputs = drv.buildInputs ++ [ obfuscator ];
        });
+  regex-web = miso-nixpkgs.haskell.packages.ghcjs.callPackage ./regex-web.nix { inherit miso; };
 in
-  pkgs.runCommand "regex-fsm" { inherit regex-fsm obfuscator; } ''
+  pkgs.runCommand "regex-fsm" { inherit regex-fsm obfuscator regex-web; } ''
     mkdir -p $out/bin
     ln -s ${obfuscator}/bin/obfuscator $out/bin/obfuscator
     ln -s ${regex-fsm}/bin/regex-fsm $out/bin/regex-fsm
     ln -s ${regex-fsm}/bin/obfuscator-tests $out/bin/obfuscator-tests
     ln -s ${regex-fsm}/bin/benchmarks $out/bin/benchmarks
+    ln -s ${regex-web}/bin/regex-web/regex-web.jsexe $out/bin/regex-web.jsexe
   ''
