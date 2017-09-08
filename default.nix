@@ -104,7 +104,7 @@ let
   };
   regex-fsm =
      let
-       x = dontCheck (enableCabalFlag (pkgs.haskellPackages.callPackage ./regex-fsm.nix {}) "obfuscator-tests");
+       x = enableCabalFlag (pkgs.haskellPackages.callPackage ./regex-fsm.nix {}) "obfuscator-tests";
      in
        pkgs.lib.overrideDerivation x (drv: {
          buildInputs = drv.buildInputs ++ [ obfuscator ];
@@ -115,4 +115,5 @@ in
     ln -s ${obfuscator}/bin/obfuscator $out/bin/obfuscator
     ln -s ${regex-fsm}/bin/regex-fsm $out/bin/regex-fsm
     ln -s ${regex-fsm}/bin/obfuscator-tests $out/bin/obfuscator-tests
+    ln -s ${regex-fsm}/bin/benchmarks $out/bin/benchmarks
   ''
