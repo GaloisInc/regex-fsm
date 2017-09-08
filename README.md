@@ -1,4 +1,4 @@
-regex-fsm
+regex-fsm [![Build Status](https://travis-ci.org/GaloisInc/regex-fsm.svg?branch=master)](https://travis-ci.org/GaloisInc/regex-fsm)
 =======================
 The `regex-fsm` tool can be used to convert certain regular expressions to efficient matrix branching programs. These programs are suitable for use in obfuscation tools like the [5GenCrypto](https://github.com/5GenCrypto) obfuscator.
 
