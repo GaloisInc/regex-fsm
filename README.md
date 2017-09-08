@@ -1,6 +1,6 @@
-regex-fsm 
+regex-fsm
 =======================
-[![Build Status](https://travis-ci.org/GaloisInc/regex-fsm.svg?branch=master)](https://travis-ci.org/GaloisInc/regex-fsm) 
+[![Build Status](https://travis-ci.org/GaloisInc/regex-fsm.svg?branch=master)](https://travis-ci.org/GaloisInc/regex-fsm)
 [![License](http://img.shields.io/badge/license-BSD3-brightgreen.svg)](https://github.com/GaloisInc/regex-fsm/blob/master/LICENSE)
 
 The `regex-fsm` tool can be used to convert certain regular expressions to efficient matrix branching programs. These programs are suitable for use in obfuscation tools like the [5GenCrypto](https://github.com/5GenCrypto) obfuscator.
@@ -68,12 +68,12 @@ Rep (Union (Lit '0') (Lit '1'))
 ENFA
   { trans =
       fromList
-        [ ( 1 , fromList [ ( Just '0' , fromList [ 2 ] ) ] )
-        , ( 2 , fromList [ ( Nothing , fromList [ 5 ] ) ] )
-        , ( 3 , fromList [ ( Just '1' , fromList [ 4 ] ) ] )
-        , ( 4 , fromList [ ( Nothing , fromList [ 5 ] ) ] )
-        , ( 5 , fromList [ ( Nothing , fromList [ 1 , 3 ] ) ] )
-        ]
+	[ ( 1 , fromList [ ( Just '0' , fromList [ 2 ] ) ] )
+	, ( 2 , fromList [ ( Nothing , fromList [ 5 ] ) ] )
+	, ( 3 , fromList [ ( Just '1' , fromList [ 4 ] ) ] )
+	, ( 4 , fromList [ ( Nothing , fromList [ 5 ] ) ] )
+	, ( 5 , fromList [ ( Nothing , fromList [ 1 , 3 ] ) ] )
+	]
   , start = 5
   , final = fromList [ 5 ]
   , states = fromList [ 1 , 2 , 3 , 4 , 5 ]
@@ -98,28 +98,28 @@ fromList
 DFA
   { trans =
       fromList
-        [ ( ( fromList [ 1 , 2 , 3 , 5 ] , '0' )
-          , fromList [ 1 , 2 , 3 , 5 ]
-          )
-        , ( ( fromList [ 1 , 2 , 3 , 5 ] , '1' )
-          , fromList [ 1 , 3 , 4 , 5 ]
-          )
-        , ( ( fromList [ 1 , 3 , 4 , 5 ] , '0' )
-          , fromList [ 1 , 2 , 3 , 5 ]
-          )
-        , ( ( fromList [ 1 , 3 , 4 , 5 ] , '1' )
-          , fromList [ 1 , 3 , 4 , 5 ]
-          )
-        , ( ( fromList [ 1 , 3 , 5 ] , '0' ) , fromList [ 1 , 2 , 3 , 5 ] )
-        , ( ( fromList [ 1 , 3 , 5 ] , '1' ) , fromList [ 1 , 3 , 4 , 5 ] )
-        ]
+	[ ( ( fromList [ 1 , 2 , 3 , 5 ] , '0' )
+	  , fromList [ 1 , 2 , 3 , 5 ]
+	  )
+	, ( ( fromList [ 1 , 2 , 3 , 5 ] , '1' )
+	  , fromList [ 1 , 3 , 4 , 5 ]
+	  )
+	, ( ( fromList [ 1 , 3 , 4 , 5 ] , '0' )
+	  , fromList [ 1 , 2 , 3 , 5 ]
+	  )
+	, ( ( fromList [ 1 , 3 , 4 , 5 ] , '1' )
+	  , fromList [ 1 , 3 , 4 , 5 ]
+	  )
+	, ( ( fromList [ 1 , 3 , 5 ] , '0' ) , fromList [ 1 , 2 , 3 , 5 ] )
+	, ( ( fromList [ 1 , 3 , 5 ] , '1' ) , fromList [ 1 , 3 , 4 , 5 ] )
+	]
   , start = fromList [ 1 , 3 , 5 ]
   , finals =
       fromList
-        [ fromList [ 1 , 2 , 3 , 5 ]
-        , fromList [ 1 , 3 , 4 , 5 ]
-        , fromList [ 1 , 3 , 5 ]
-        ]
+	[ fromList [ 1 , 2 , 3 , 5 ]
+	, fromList [ 1 , 3 , 4 , 5 ]
+	, fromList [ 1 , 3 , 5 ]
+	]
   }
 ```
 
@@ -129,9 +129,9 @@ DFA
 DFA
   { trans =
       fromList
-        [ ( ( fromList [ 1 , 3 , 5 ] , '0' ) , fromList [ 1 , 3 , 5 ] )
-        , ( ( fromList [ 1 , 3 , 5 ] , '1' ) , fromList [ 1 , 3 , 5 ] )
-        ]
+	[ ( ( fromList [ 1 , 3 , 5 ] , '0' ) , fromList [ 1 , 3 , 5 ] )
+	, ( ( fromList [ 1 , 3 , 5 ] , '1' ) , fromList [ 1 , 3 , 5 ] )
+	]
   , start = fromList [ 1 , 3 , 5 ]
   , finals = fromList [ fromList [ 1 , 3 , 5 ] ]
   }
@@ -158,15 +158,15 @@ Suitable for use with the [5Gen](https://github.com/5GenCrypto) obfuscation tool
 ```javascript
 {
   "steps": [{"0":[[1]],"1":[[1]],"position":"0"},
-            {"0":[[1]],"1":[[1]],"position":"1"},
-            {"0":[[1]],"1":[[1]],"position":"2"},
-            {"0":[[1]],"1":[[1]],"position":"3"},
-            {"0":[[1]],"1":[[1]],"position":"4"},
-            {"0":[[1]],"1":[[1]],"position":"5"},
-            {"0":[[1]],"1":[[1]],"position":"6"},
-            {"0":[[1]],"1":[[1]],"position":"7"},
-            {"0":[[1]],"1":[[1]],"position":"8"},
-            {"0":[[0]],"1":[[0]],"position":"9"}]
+	    {"0":[[1]],"1":[[1]],"position":"1"},
+	    {"0":[[1]],"1":[[1]],"position":"2"},
+	    {"0":[[1]],"1":[[1]],"position":"3"},
+	    {"0":[[1]],"1":[[1]],"position":"4"},
+	    {"0":[[1]],"1":[[1]],"position":"5"},
+	    {"0":[[1]],"1":[[1]],"position":"6"},
+	    {"0":[[1]],"1":[[1]],"position":"7"},
+	    {"0":[[1]],"1":[[1]],"position":"8"},
+	    {"0":[[0]],"1":[[0]],"position":"9"}]
  ,"outputs": [["false","true"]]
 }
 ```
@@ -198,7 +198,7 @@ $ open index.html
 ```
 
 ## Tests
-To run the entire pipeline once against the [5Gen](https://github.com/5GenCrypto) obfuscator tool, execute `obfuscator-tests` with a security parameter (defaults to 40).
+To run the entire pipeline once against the [5Gen](https://github.com/5GenCrypto) obfuscator tool, execute `obfuscator-tests` with a security parameter (defaults to `40`).
 ```bash
 $ nix-build
 $ ./result/bin/obfuscator-tests --secParam 8
@@ -224,4 +224,4 @@ Test suite logged to: dist/test/regex-fsm-0.1.0.0-tests.log
 ```
 
 ## LICENSE
-[BSD3](License) (c) Galois Inc.
+[BSD3](LICENSE) (c) Galois Inc.
