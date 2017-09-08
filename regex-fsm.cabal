@@ -1,5 +1,5 @@
 name:                regex-fsm
-author:              David Johnson
+author:              David Johnson, Daniel Wagner
 version:             0.1.0.0
 license:             BSD3
 synopsis:            Convert regular expressions to matrix branching programs
