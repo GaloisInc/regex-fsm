@@ -44,7 +44,7 @@ To build with [nix](https://nixos.org/nix/)
 nix-build
 ```
 
-To develop `regex-fsm` with `nix`
+To develop `regex-fsm` with `nix` (highly recommended)
 ```
 nix-shell -A regex-fsm.env
 ```
