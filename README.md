@@ -51,7 +51,7 @@ nix-shell -A regex-fsm.env
 
 ## Usage
 ```bash
-$ regex-fsm --regex '(0|1)*' --inputLength 10 --output output.json --verbose True --chunks 1
+$ regex-fsm --regex '(0|1)*' --inputLength 10 --output output.json --verbose --chunks 1
 ```
 
 ## Construction
@@ -176,7 +176,7 @@ A further optimization before matrix encoding is premultiplication. This will de
 
 ### Chunks
 ```bash
-$ regex-fsm --regex '(0|1)*' --inputLength 10 --output output.json --verbose True --chunks 2
+$ regex-fsm --regex '(0|1)*' --inputLength 10 --output output.json --verbose --chunks 2
 ```
 
 ### Result

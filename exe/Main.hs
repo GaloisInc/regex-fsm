@@ -14,12 +14,12 @@ import           Text.Show.Pretty
 
 import           Regex
 
--- | Example `./regex-fsm --regex (a|b)|(a|b) --inputLength 5 --verbose True
+-- | Example `./regex-fsm --regex (a|b)|(a|b) --inputLength 5 --verbose
 data Options
   = Options
   { regex :: String
   , inputLength :: Int
-  , verbose :: Maybe Bool
+  , verbose :: Bool
   , output :: String
   , chunks :: Maybe Int
   } deriving (Show, Eq, Generic)
@@ -44,7 +44,7 @@ main = do
           minimized = minimize subset'
           matrices  = premultiply (fromMaybe 1 chunks) $ toMatrices inputLength minimized
       BL.writeFile output $ encode (Matrices inputLength matrices)
-      when (verbose == Just True) $ do
+      when verbose $ do
         putStrLn "== Regular Expression AST =="
         pPrint regex'
         putStrLn "== Thompson's construction =="
