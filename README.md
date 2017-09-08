@@ -204,7 +204,7 @@ $ ./result/bin/obfuscator-tests --secParam 8
 To run the entire test suite (takes a long time and is very resource intensive).
 ```bash
 $ nix-build
-$ ./result/bin/obfuscator-tests --runTestSuites True
+$ ./result/bin/obfuscator-tests --runTestSuites
 ```
 
 To run unit tests, simply `nix-build`, unit tests are run automatically.
