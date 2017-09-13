@@ -10,13 +10,12 @@ import           Data.Aeson
 import qualified Data.ByteString.Lazy as BL
 import           Data.IORef
 import           Data.Maybe
+import           Data.Monoid
 import           Data.Set
-import           System.Environment
+import           Options.Generic
 import           System.IO
 import           System.Process
 import           System.Random
-import           Text.Read
-import           Options.Generic
 
 import           Regex
 
@@ -55,18 +54,15 @@ randomInput = point
 incr :: IORef Int -> IO Int
 incr ref = modifyIORef ref (+1) >> readIORef ref
 
-getSecParam :: IO (Maybe Int)
-getSecParam = do
-  args <- getArgs
-  pure $ case args of
-    [n] -> readMaybe n
-    _   -> Nothing
-
 -- | Example `./obfuscator-tests --secParam 40
 data Options
   = Options
   { runTestSuites :: Bool
   , secParam :: Maybe Int
+  , pointTest :: Bool
+  , infixPointTest :: Bool
+  , conjunctionTest :: Bool
+  , folderPath :: Maybe String
   } deriving (Show, Eq, Generic)
 
 modifiers :: Modifiers
@@ -78,30 +74,59 @@ instance ParseRecord Options where
 main :: IO ()
 main = do
   Options {..} <- getRecord "obfuscator-tests"
-  let secParam' = fromMaybe 40 secParam
+  let secParam' = fromMaybe 80 secParam
+      path' = fromMaybe "" folderPath
   case runTestSuites of
-    True -> runSuite
+    True -> runSuite path'
     False -> do
       putStrLn $ "Security Parameter of: " ++ show secParam'
-      oneShot secParam'
+      when pointTest $ do
+        putStrLn "Running Point tests.."
+      when conjunctionTest $ do
+        putStrLn "Running Conjunction tests..."
+      when infixPointTest $ do
+        putStrLn "Running Infix Point tests.."
+      putStrLn $ "Folder path: " <> path'
+      let opts = defaultOpts {
+          pointTest' = pointTest
+        , infixPointTest' = infixPointTest
+        , conjunctionTest' = conjunctionTest
+        }
+      oneShot opts path' secParam'
 
-runSuite :: IO ()
-runSuite = forM_ [40, 80] testSim
+-- | Test options
+data TestOpts
+  = TestOpts
+  { pointTest' :: Bool
+  , infixPointTest' :: Bool
+  , conjunctionTest' :: Bool
+  } deriving (Show, Eq)
 
-oneShot :: Int -> IO ()
-oneShot = testSim
+defaultOpts :: TestOpts
+defaultOpts = TestOpts True True True
 
-testSim :: SecParam -> IO ()
-testSim s = do
+runSuite :: String -> IO ()
+runSuite path = forM_ [40, 80] (oneShot defaultOpts path)
+
+oneShot :: TestOpts -> String -> SecParam -> IO ()
+oneShot TestOpts {..} path s = do
   ref <- newIORef (0 :: Int)
+  when pointTest' (pointTests ref s path)
+  when conjunctionTest' (conjunctionTests ref s path)
+  when infixPointTest' (infixTests ref s path)
+
+pointTests :: IORef Int -> SecParam -> String -> IO ()
+pointTests ref s path = do
   hPutStrLn stderr "Point function tests"
   pfs <- pointFunctions
   forM_ pfs $ \pf -> do
     n <- incr ref
     hPutStrLn stderr $ "Test number: " ++ show n
     hPutStrLn stderr $ "(Regex, Input): " ++ show (pf, pf)
-    testObfuscatorWithSecurity pf pf (length pf) s 1
+    testObfuscatorWithSecurity path pf pf (length pf) s 1
 
+conjunctionTests :: IORef Int -> SecParam -> String -> IO ()
+conjunctionTests ref s path = do
   hPutStrLn stderr "Conjunction function tests"
   cfs <- conjunctionFunctions
   forM_ (zip [32,36..72] cfs) $ \(k,cf) -> do
@@ -109,8 +134,10 @@ testSim s = do
     xs <- point k
     hPutStrLn stderr $ "Test number: " ++ show n
     hPutStrLn stderr $ "(Regex, Input): " ++ show (cf, xs)
-    testObfuscatorWithSecurity cf xs (length xs) s 1
+    testObfuscatorWithSecurity path cf xs (length xs) s 1
 
+infixTests :: IORef Int -> SecParam -> String ->IO ()
+infixTests ref s path = do
   hPutStrLn stderr "Infix function tests"
   ipfs <- infixPointFunctions
   forM_ (zip [32,36..72] ipfs) $ \(i,cf) -> do
@@ -118,7 +145,7 @@ testSim s = do
     xs' <- point i
     hPutStrLn stderr $ "Test number: " ++ show n
     hPutStrLn stderr $ "(Regex, Input): " ++ show (cf, xs')
-    testObfuscatorWithSecurity cf xs' (length xs') s 1
+    testObfuscatorWithSecurity path cf xs' (length xs') s 1
 
 type RegexString = String
 type ProcessArg = String
@@ -127,17 +154,21 @@ type SecParam = Int
 type Length = Int
 
 testObfuscatorWithSecurity
-  :: RegexString
+  :: String
+  -> RegexString
   -> ProcessArg
   -> Length
   -> SecParam
   -> Int
   -> IO ()
-testObfuscatorWithSecurity str arg n secParam chunks = do
+testObfuscatorWithSecurity path str arg n secParam chunks = do
   let Right regex = parseRegex str
       dfa :: DFA (Set Int) Char = minimize $ subset (thompsons regex)
       test = Matrices n $ premultiply chunks (toMatrices n dfa)
-      fileName = "output.json"
+      fileName =
+        if Prelude.null path
+          then "output.json"
+          else path ++ "/output.json"
   BL.writeFile fileName (encode test)
   hPutStrLn stderr "Obfuscating"
   e' <- readProcess "./result/bin/obfuscator"
