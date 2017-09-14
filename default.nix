@@ -63,8 +63,8 @@ let
   obfuscator-src = fetchFromGitHub {
     owner = "5GenCrypto";
     repo = "obfuscation";
-    sha256 = "05h401dfapl6jwn4nfhxzzs9kaddn0hb13b6sbas7ir71lb6g847";
-    rev = "9e1346088c1ded29be8898b3a3ed24dcab801d6f";
+    sha256 = "12bzix37q65bgbfa421vdj3dpy9xxcvks9ghq1s7byamnmf01063";
+    rev = "c26af017d73f1a016a5db8c1aaac57d51f55be53";
   };
   obfuscator-c = pkgs.stdenv.mkDerivation {
     name = "obfuscator-c";
