@@ -18,6 +18,7 @@ module Regex.DFA
   ( -- * Types
     DFA  (..)
   , subset
+  , renumber
   , minimize
   , simulateDFA
   ) where
@@ -89,22 +90,24 @@ data DFA s a
 
 instance NFData (DFA (Set Int) Char)
 
+-- | This function is unsafe. It should only be called with injective rewriting
+-- functions.
+unsafeRewriteDFA :: Ord s' => (s -> s') -> DFA s a -> DFA s' a
+unsafeRewriteDFA rewrite DFA{..} = DFA
+    (fmap (fmap rewrite) $ M.mapKeys rewrite trans)
+    (rewrite start)
+    (S.map rewrite finals)
+
+renumber :: Ord s => DFA s a -> DFA Int a
+renumber dfa@DFA{..} = unsafeRewriteDFA (flip M.findIndex trans) dfa
+
 -- | Minimize a DFA
 -- Two DFAs are called equivalent if they recognize the same regular language.
 -- For every regular language L, there exists a unique, minimal DFA that recognizes L
 minimize :: (Ord a, Ord s) => DFA s (SecretiveTransition a) -> DFA s (SecretiveTransition a)
-minimize dfa@DFA {..} =
-  DFA { trans = update
-      , start = rewrite start
-      , finals = S.map rewrite finals
-      }
-  where
-    update = id
-      . fmap (fmap rewrite)
-      . M.mapKeys rewrite
-      $ trans
-    rewriteRules = equivalentToRewrite . equivalentStates $ dfa
-    rewrite s = M.findWithDefault s s rewriteRules
+minimize dfa = unsafeRewriteDFA rewrite dfa where
+  rewriteRules = equivalentToRewrite . equivalentStates $ dfa
+  rewrite s = M.findWithDefault s s rewriteRules
 
 smallPairs :: [t] -> [(t, t)]
 smallPairs xs = do

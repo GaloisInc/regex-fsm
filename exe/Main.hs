@@ -40,10 +40,12 @@ main = do
       putStrLn "Failed to parse, error:"
       print err
     Right regex' -> do
-      let thompson  = thompsons regex'
+      let thompson :: ENFA Int (Secretive Char)
+          thompson  = thompsons regex'
           closure   = getClosure thompson
           subset'   = subset (S.fromList alphabet) thompson
-          minimized = minimize subset'
+          numbered  = renumber subset'
+          minimized = minimize numbered
           -- TODO: symbolic matrices, too!
           -- matrices  = toMatrices inputLength minimized
       -- BL.writeFile output $ encode (Matrices inputLength matrices)
@@ -51,11 +53,13 @@ main = do
         putStrLn "== Regular Expression AST =="
         pPrint regex'
         putStrLn "== Thompson's construction =="
-        pPrint (thompson :: ENFA Int (Secretive Char))
+        pPrint thompson
         putStrLn "== Closure construction =="
         pPrint closure
         putStrLn "== Subset construction =="
         pPrint subset'
+        putStrLn "== Int-based DFA =="
+        pPrint numbered
         putStrLn "== Minimized DFA =="
         pPrint minimized
         -- putStrLn "== Matrix Branching Program =="
