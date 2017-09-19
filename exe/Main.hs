@@ -13,6 +13,8 @@ import           Text.Show.Pretty
 
 import           Regex
 
+import qualified Data.Set as S
+
 -- | Example `./regex-fsm --regex (a|b)|(a|b) --inputLength 5 --verbose True
 data Options
   = Options
@@ -20,6 +22,7 @@ data Options
   , inputLength :: Int
   , verbose :: Maybe Bool
   , output :: String
+  , alphabet :: String
   } deriving (Show, Eq, Generic)
 
 modifiers :: Modifiers
@@ -32,27 +35,28 @@ instance ParseRecord Options where
 main :: IO ()
 main = do
   Options {..} <- getRecord "regex-fsm"
-  case parseRegex regex :: Either ParseError (Reg Char) of
+  case parseRegex regex :: Either ParseError (Reg (Secretive Char)) of
     Left err -> do
       putStrLn "Failed to parse, error:"
       print err
     Right regex' -> do
       let thompson  = thompsons regex'
           closure   = getClosure thompson
-          subset'   = subset thompson
+          subset'   = subset (S.fromList alphabet) thompson
           minimized = minimize subset'
-          matrices  = toMatrices inputLength minimized
-      BL.writeFile output $ encode (Matrices inputLength matrices)
+          -- TODO: symbolic matrices, too!
+          -- matrices  = toMatrices inputLength minimized
+      -- BL.writeFile output $ encode (Matrices inputLength matrices)
       when (verbose == Just True) $ do
         putStrLn "== Regular Expression AST =="
         pPrint regex'
         putStrLn "== Thompson's construction =="
-        pPrint (thompson :: ENFA Int Char)
+        pPrint (thompson :: ENFA Int (Secretive Char))
         putStrLn "== Closure construction =="
         pPrint closure
         putStrLn "== Subset construction =="
         pPrint subset'
         putStrLn "== Minimized DFA =="
         pPrint minimized
-        putStrLn "== Matrix Branching Program =="
-        pPrint matrices
+        -- putStrLn "== Matrix Branching Program =="
+        -- pPrint matrices
