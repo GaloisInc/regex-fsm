@@ -22,13 +22,14 @@ executable regex-fsm
   ghc-options:
     -Wall -O2 -threaded -fdicts-cheap -funbox-strict-fields
   other-modules:
-    Regex
+    Regex,
     Regex.Closure,
     Regex.DFA,
     Regex.ENFA,
     Regex.MBP,
     Regex.Parse,
-    Regex.Types
+    Regex.Types,
+    Regex.Secretive
   build-depends:
     aeson >=1.1 && <1.3,
     base >=4.8 && <4.10,

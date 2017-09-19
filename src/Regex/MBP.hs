@@ -6,6 +6,7 @@
 module Regex.MBP ( toMatrices, simulateMBP ) where
 
 import           Control.Monad.State
+import           Data.List
 import           Data.Map
 import qualified Data.Map            as M
 import           Data.Matrix         as Matrix
@@ -22,10 +23,11 @@ buildStep
   -> (Map a (Matrix Int), Set s)
 buildStep DFA {..} srcs = (M.map fromLists matrices, tgts)
   where
-    alphabet = Prelude.map snd (M.keys trans)
+    ordNub = fmap head . group . sort
+    alphabet = ordNub $ M.elems trans >>= M.keys
     matrices = M.fromList [ (a, matrixFor a) | a <- alphabet ]
     matrixFor a = [
-        [ if M.lookup (src,a) trans == Just tgt
+        [ if (M.lookup src trans >>= M.lookup a) == Just tgt
             then 1
             else 0
         | tgt <- S.toAscList tgts
@@ -37,7 +39,7 @@ buildStep DFA {..} srcs = (M.map fromLists matrices, tgts)
         [ x
         | s <- S.toList srcs
         , a <- alphabet
-        , let x = M.lookup (s, a) trans
+        , let x = M.lookup s trans >>= M.lookup a
         ]
 
 -- | Convert to Matrices
