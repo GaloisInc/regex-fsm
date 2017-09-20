@@ -11,6 +11,7 @@ import           Options.Generic
 import           Text.ParserCombinators.Parsec
 import           Text.Show.Pretty
 
+import           PP
 import           Regex
 
 import qualified Data.Set as S
@@ -46,6 +47,7 @@ main = do
           subset'   = subset (S.fromList alphabet) thompson
           numbered  = renumber subset'
           minimized = minimize numbered
+          minnum    = renumber minimized
           -- TODO: symbolic matrices, too!
           -- matrices  = toMatrices inputLength minimized
       -- BL.writeFile output $ encode (Matrices inputLength matrices)
@@ -61,6 +63,8 @@ main = do
         putStrLn "== Int-based DFA =="
         pPrint numbered
         putStrLn "== Minimized DFA =="
-        pPrint minimized
+        putStr (pp minimized)
+        putStrLn "== Renumbered minimized DFA =="
+        putStr (pp minnum)
         -- putStrLn "== Matrix Branching Program =="
         -- pPrint matrices

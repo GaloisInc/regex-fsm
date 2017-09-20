@@ -29,7 +29,8 @@ executable regex-fsm
     Regex.MBP,
     Regex.Parse,
     Regex.Types,
-    Regex.Secretive
+    Regex.Secretive,
+    PP
   build-depends:
     aeson >=1.1 && <1.3,
     base >=4.8 && <4.10,
