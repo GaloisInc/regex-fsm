@@ -63,8 +63,8 @@ let
   obfuscator-src = fetchFromGitHub {
     owner = "5GenCrypto";
     repo = "obfuscation";
-    sha256 = "12bzix37q65bgbfa421vdj3dpy9xxcvks9ghq1s7byamnmf01063";
-    rev = "c26af017d73f1a016a5db8c1aaac57d51f55be53";
+    sha256 = "1ffrv1xqgvv9h2xnl40mqd7g311man53jbf7075w52njrchjdgp4";
+    rev = "af6ff702168cd8875597a98e4326490b746caa62";
   };
   obfuscator-c = pkgs.stdenv.mkDerivation {
     name = "obfuscator-c";
@@ -72,33 +72,35 @@ let
     buildInputs =
       with pkgs; [
         autoreconfHook
-	libaesrand
-	clt13
-	libmmap
-	flint
-	gmp
-	mpfr
-	openssl
-	gghlite-flint
+	      libaesrand
+	      clt13
+	      libmmap
+	      flint
+	      gmp
+	      mpfr
+	      openssl
+	      gghlite-flint
      ];
     src = obfuscator-src;
   };
   obfuscator = pkgs.pythonPackages.buildPythonPackage {
     name = "obfuscator";
     NIX_LDFLAGS = "-lmpfr -lgmp -lflint -lmmap -laesrand -loz -lobf";
-    propagatedBuildInputs = with pkgs.pythonPackages; [ numpy ];
+    propagatedBuildInputs = with pkgs.pythonPackages; [ future numpy ];
     buildInputs = with pkgs; [
-	gghlite-flint
-	libaesrand
-	clt13
-	libmmap
-	flint
-	gmp
-	mpfr
-        obfuscator-c
-	python27
-	pythonPackages.setuptools
-	pythonPackages.numpy
+	    gghlite-flint
+	    libaesrand
+	    clt13
+	    libmmap
+	    flint
+	    gmp
+	    mpfr
+      openssl
+      obfuscator-c
+	    python27
+	    pythonPackages.setuptools
+      pythonPackages.future
+	    pythonPackages.numpy
     ];
     src = obfuscator-src;
   };
