@@ -36,8 +36,8 @@ buildStep
   -> (Map a (Matrix Int), Set s)
 buildStep DFA {..} srcs = (M.map fromLists matrices, tgts)
   where
-    alphabet = Prelude.map snd (M.keys trans)
-    matrices = M.fromList [ (a, matrixFor a) | a <- alphabet ]
+    ks = Prelude.map snd (M.keys trans)
+    matrices = M.fromList [ (a, matrixFor a) | a <- ks ]
     matrixFor a = [
         [ if M.lookup (src,a) trans == Just tgt
             then 1
@@ -50,7 +50,7 @@ buildStep DFA {..} srcs = (M.map fromLists matrices, tgts)
       S.fromList . catMaybes $
         [ x
         | s <- S.toList srcs
-        , a <- alphabet
+        , a <- ks
         , let x = M.lookup (s, a) trans
         ]
 

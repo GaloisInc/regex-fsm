@@ -38,9 +38,10 @@ main = do
     Left err -> do
       error $ "Failed to parse, error: " ++ show err
     Right regex' -> do
-      let thompson  = thompsons regex'
+      let alphabet  = "01" :: String
+          thompson  = thompsons regex'
           closure   = getClosure thompson
-          subset'   = subset thompson
+          subset'   = subset alphabet thompson
           minimized = minimize subset'
           matrices  = premultiply (fromMaybe 1 chunks) $ toMatrices inputLength minimized
       BL.writeFile output $ encode (Matrices inputLength matrices)

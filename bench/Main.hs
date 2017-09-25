@@ -14,14 +14,17 @@ parse r =
     Right x -> x
     Left _ -> error "Couldn't parse"
 
+alphabet :: String
+alphabet = "01"
+
 constructThompsons :: String -> ENFA Int Char
 constructThompsons = thompsons . parse
 
 constructSubset :: String -> DFA (Set Int) Char
-constructSubset = subset . thompsons . parse
+constructSubset = subset alphabet . thompsons . parse
 
 constructMinimized :: String -> DFA (Set Int) Char
-constructMinimized = minimize . subset . thompsons . parse
+constructMinimized = minimize . subset alphabet . thompsons . parse
 
 constructMatrix
   :: Int
@@ -30,7 +33,7 @@ constructMatrix
 constructMatrix n =
     toMatrices' n
   . minimize
-  . subset
+  . subset alphabet
   . thompsons
   . parse
     where
