@@ -14,7 +14,7 @@ import           Text.Show.Pretty
 
 import           Regex
 
--- | Example `./regex-fsm --regex (a|b)|(a|b) --inputLength 5 --verbose
+-- | Example `./regex-fsm --regex (a|b)|(a|b) --inputLength 5 --verbose --alphabet ab
 data Options
   = Options
   { regex :: String
@@ -22,6 +22,7 @@ data Options
   , verbose :: Bool
   , output :: String
   , chunks :: Maybe Int
+  , alphabet :: String
   } deriving (Show, Eq, Generic)
 
 modifiers :: Modifiers
@@ -38,8 +39,7 @@ main = do
     Left err -> do
       error $ "Failed to parse, error: " ++ show err
     Right regex' -> do
-      let alphabet  = "01" :: String
-          thompson  = thompsons regex'
+      let thompson  = thompsons regex'
           closure   = getClosure thompson
           subset'   = subset alphabet thompson
           minimized = minimize subset'
