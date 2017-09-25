@@ -153,6 +153,9 @@ type ProcessArg = String
 type SecParam = Int
 type Length = Int
 
+alphabet :: String
+alphabet = "01"
+
 testObfuscatorWithSecurity
   :: String
   -> RegexString
@@ -163,7 +166,7 @@ testObfuscatorWithSecurity
   -> IO ()
 testObfuscatorWithSecurity path str arg n secParam chunks = do
   let Right regex = parseRegex str
-      dfa :: DFA (Set Int) Char = minimize $ subset (thompsons regex)
+      dfa :: DFA (Set Int) Char = minimize $ subset alphabet (thompsons regex)
       test = Matrices n $ premultiply chunks (toMatrices n dfa)
       fileName =
         if Prelude.null path

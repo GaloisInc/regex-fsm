@@ -37,16 +37,11 @@ import           Regex.Closure       (getClosure)
 import           Regex.Types         (ENFA(..))
 
 -- | Convert an ENFA into a DFA
-subset :: Ord a => Ord s => ENFA s a -> DFA (Set s) a
-subset enfa@ENFA {..} = getDFA
+subset :: Ord a => Ord s => [a] -> ENFA s a -> DFA (Set s) a
+subset alphabet enfa@ENFA {..} = getDFA
   where
     -- Retrieve epsilon closure map (call DFS from every state in NFA)
     closureMap = getClosure enfa
-    -- Retrieve alphabet from ENFA transition map
-    alphabet = nub
-             $ concatMap catMaybes
-             $ map M.keys
-             $ M.elems trans
     -- Push epsilon closure (our first DFA state) onto the stack
     startState = emptyState {
       toVisit = pure (closureMap M.! start)
@@ -146,8 +141,8 @@ instance NFData (DFA (Set Int) Char)
 -- For every regular language L, there exists a unique, minimal DFA that recognizes L
 minimize :: Show s => (Ord a, Ord s) => DFA (Set s) a -> DFA (Set s) a
 minimize dfa@DFA {..} =
-  DFA { trans = update
-      , start = rewrite start
+  DFA { trans  = update
+      , start  = rewrite start
       , finals = S.map rewrite finals
       }
   where
@@ -185,17 +180,14 @@ step :: (Ord a, Ord s)
      => DFA (Set s) a
      -> Set (Set s, Set s)
      -> Set (Set s, Set s)
-step dfa rel = S.filter neighborsRelated rel where
-  neighborsRelated (s,s') = and
-    [ related rel l r
-    | a <- S.toList $ getAlphabet dfa
-    , let l = (Regex.DFA.trans dfa) M.! (s, a)
-    , let r = (Regex.DFA.trans dfa) M.! (s',a)
-    ]
-
-getAlphabet :: Ord a => DFA s a -> Set a
-getAlphabet DFA {..} =
-  S.fromList [ snd x | x <- M.keys trans ]
+step DFA{..} rel = S.filter neighborsRelated rel
+  where
+    neighborsRelated (s,s') = and
+      [ related rel l r
+      | a <- [ snd x | x <- M.keys trans ]
+      , let l = trans M.! (s, a)
+      , let r = trans M.! (s',a)
+      ]
 
 equivalentStates :: Show s => (Ord a, Ord s) => DFA (Set s) a -> Set (Set s, Set s)
 equivalentStates dfa = go (initialize dfa)
